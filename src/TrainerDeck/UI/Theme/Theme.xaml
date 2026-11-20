@@ -56,6 +56,7 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <ui:NullToVisibilityConverter x:Key="NullToVisibility" />
+    <ui:NullToVisibilityConverter x:Key="NullToVisibilityInverse" Invert="True" />
     <ui:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
 
     <sys:Double x:Key="PageGutter">40</sys:Double>

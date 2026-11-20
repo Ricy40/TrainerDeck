@@ -32,6 +32,20 @@ public sealed partial class LibraryViewModel : PageViewModel
         _library.Changed += (_, _) => _dispatcher.BeginInvoke(OnLibraryChanged);
         _launcher.Running.Changed += (_, _) => _dispatcher.BeginInvoke(UpdateRunning);
         _art.Steam.Changed += (_, _) => _dispatcher.BeginInvoke(ReloadCovers);
+        main.Services.Cheats.CoverCaptured += id => _dispatcher.BeginInvoke(() =>
+        {
+            if (_cards.TryGetValue(id, out TrainerCardViewModel? card))
+            {
+                card.ReloadCover(_art, _dispatcher);
+            }
+        });
+        _art.GenericIconsChanged += (_, _) => _dispatcher.BeginInvoke(() =>
+        {
+            foreach (TrainerCardViewModel card in _cards.Values)
+            {
+                card.IsGenericIcon = card.IconFingerprint is string fp && _art.IsGenericIcon(fp);
+            }
+        });
     }
 
     [ObservableProperty]

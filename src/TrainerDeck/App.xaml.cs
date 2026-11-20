@@ -75,7 +75,7 @@ public partial class App : Application
 
         MainWindow? window = null;
         _launcher = new LaunchService(_library, () => window is null ? IntPtr.Zero : new WindowInteropHelper(window).Handle);
-        var cheats = new CheatService(_library, _launcher, settings, elevated);
+        var cheats = new CheatService(_library, _launcher, settings, art, elevated);
         _main = new MainViewModel(new AppServices(_library, art, _launcher, steam, settings, paths, elevated, cheats), Dispatcher);
         string[] args = e.Args;
         _main.RestartElevatedRequested += () => RestartElevated(args);

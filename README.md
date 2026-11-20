@@ -8,7 +8,7 @@ A full-screen, controller-friendly launcher for FLiNG game trainers. It's made f
 - Launches trainers as administrator, shows which ones are running, and can close them.
 - Navigates fully with a controller (Xbox, the Ally's built-in pad, PlayStation and other DirectInput pads) or with keyboard and mouse.
 - Ignores the controller unless Trainer Deck is the window in front, so buttons you press in a game never trigger anything here.
-- Uses cover art from games installed through Steam (read locally, nothing downloaded) and can launch those games. Downloading art for other games is opt-in.
+- Shows game cover art: from games installed through Steam (read locally, nothing downloaded), or captured from the trainer's own window the first time it runs. Downloading Steam art for other games is opt-in.
 - Portable: settings and caches live next to the exe.
 
 ## Getting started
@@ -70,7 +70,18 @@ The Ally X's back paddles can send keyboard keys, which is handy for trainer hot
 - **Launch:** trainers start as administrator with their own folder as the working directory. Most trainers need admin rights, so Windows shows a UAC prompt. Cancelling it does nothing.
 - **After launch:** Trainer Deck brings the trainer's window to the front. Then it stays open, minimises (the default) or closes, per **Settings › After launching a trainer**.
 - **Running trainers:** a green **Running** badge shows on each one, including trainers you started another way. Press A on a running trainer to switch to it. **Close trainer** is on the details page (Y) and the right-click menu.
-- **Run Trainer Deck as administrator** (Settings): Trainer Deck asks for admin rights once when it starts, so trainers launch without a prompt each time. This also lets Close trainer work on any trainer. The trade-off is one UAC prompt every time Trainer Deck starts. Steam games are still started without admin rights.
+- **Always run as administrator** (top of Settings; recommended): Trainer Deck asks for admin rights once when it starts, so trainers launch without a prompt each time. This also lets Close trainer work on any trainer. The trade-off is one UAC prompt every time Trainer Deck starts. Steam games are still started without admin rights.
+
+## Card art
+
+FLiNG trainers all share the same "Trainer 3DM" icon, so Trainer Deck doesn't use it. Each card shows, in order of preference:
+
+1. **Your own image:** details page › Change art.
+2. **Steam art,** for games installed through Steam (or downloaded, if you turn that on).
+3. **The game cover from the trainer's window.** It's captured automatically the first time a trainer is running and Trainer Deck can read it, which needs **Always run as administrator**. It's saved in `cache\covers`.
+4. **A coloured tile with the game's initial** until one of the above is available.
+
+The folder button in the top bar opens your trainer folder.
 
 ## Cheats panel (controller remote for trainers)
 
@@ -85,7 +96,7 @@ FLiNG trainers expect a keyboard with a numpad. Trainer Deck lets you use them w
 **How it works:**
 - **Current FLiNG trainers:** Trainer Deck reads the trainer's window through Windows accessibility (UI Automation) and presses the trainer's own switches. What you see is the trainer's real state, kept in sync even if you also use the keyboard.
 - **Older trainers:** for example Hades v1.38, Trainer Deck reads the cheat names and presses their hotkeys for you. It can't see whether a cheat is on, so listen for the trainer's beep.
-- **Administrator rights:** trainers run as administrator, and Windows only lets a program read another program's window when it has the same rights. Turn on **Settings › Run Trainer Deck as administrator** to get the full panel (the panel offers a one-click restart). Without it, the panel falls back to pressing hotkeys, using the cheat list from the last time the trainer was read.
+- **Administrator rights:** trainers run as administrator, and Windows only lets a program read another program's window when it has the same rights. Turn on **Settings › Always run as administrator** to get the full panel (the panel offers a one-click restart). Without it, the panel falls back to pressing hotkeys, using the cheat list from the last time the trainer was read.
 
 ### In-game controller shortcuts
 

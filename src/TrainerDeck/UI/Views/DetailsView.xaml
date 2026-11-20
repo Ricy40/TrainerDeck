@@ -33,7 +33,10 @@
                         <VisualBrush Visual="{Binding ElementName=CoverMask}" />
                     </Grid.OpacityMask>
                     <Rectangle Fill="{Binding ArtBackground}" />
-                    <Image x:Name="IconImage" Source="{Binding Icon}" Width="128" Height="128" RenderOptions.BitmapScalingMode="HighQuality">
+                    <TextBlock Text="{Binding Initial}" Style="{StaticResource TextTitle}" FontSize="110" Opacity="0.85"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding DisplayIcon, Converter={StaticResource NullToVisibilityInverse}}" />
+                    <Image x:Name="IconImage" Source="{Binding DisplayIcon}" Width="128" Height="128" RenderOptions.BitmapScalingMode="HighQuality">
                         <Image.Effect>
                             <DropShadowEffect BlurRadius="28" ShadowDepth="4" Opacity="0.45" />
                         </Image.Effect>

@@ -82,7 +82,7 @@
 
                 <!-- Exe icon, centred in the upper part of the card -->
                 <Grid x:Name="IconArea" VerticalAlignment="Top" Margin="0,34,0,0" HorizontalAlignment="Center">
-                    <Image x:Name="IconImage" Source="{Binding Icon}" Width="104" Height="104"
+                    <Image x:Name="IconImage" Source="{Binding DisplayIcon}" Width="104" Height="104"
                            RenderOptions.BitmapScalingMode="HighQuality">
                         <Image.Effect>
                             <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.45" />
@@ -124,7 +124,7 @@
             <DataTrigger Binding="{Binding HasCover}" Value="True">
                 <Setter TargetName="IconArea" Property="Visibility" Value="Collapsed" />
             </DataTrigger>
-            <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+            <DataTrigger Binding="{Binding DisplayIcon}" Value="{x:Null}">
                 <Setter TargetName="IconImage" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="Initial" Property="Visibility" Value="Visible" />
             </DataTrigger>

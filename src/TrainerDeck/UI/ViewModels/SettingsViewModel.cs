@@ -48,7 +48,17 @@ public sealed class SettingsViewModel : RowListPageViewModel
 
     private void Rebuild()
     {
-        var rows = new List<RowViewModel> { new HeaderRow("Library") };
+        var rows = new List<RowViewModel> { new HeaderRow("Administrator") };
+        rows.Add(new ToggleRow("Always run as administrator", Current.RunAsAdministrator, SetRunAsAdministrator,
+            (_s.IsElevated ? "Running as administrator now. " : "Not running as administrator right now. ")
+            + "Needed for the Cheats panel. Windows asks once each time Trainer Deck starts; trainers then launch without their own prompts."));
+        if (!_s.IsElevated)
+        {
+            rows.Add(new ActionRow("Restart as administrator now", Glyphs.Shield, Main.RequestRestartElevated, "Restart",
+                "Also turns on “Always run as administrator”"));
+        }
+
+        rows.Add(new HeaderRow("Library"));
         bool usingDefault = Current.TrainerFolders.Count == 0;
         foreach (string folder in _s.Library.Roots)
         {
@@ -76,8 +86,6 @@ public sealed class SettingsViewModel : RowListPageViewModel
         rows.Add(new HeaderRow("Launching"));
         rows.Add(new ChoiceRow("After launching a trainer", AfterLaunchOptions, (int)Current.AfterLaunch,
             i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)));
-        rows.Add(new ToggleRow("Run Trainer Deck as administrator", Current.RunAsAdministrator, v => _s.Settings.Update(s => s.RunAsAdministrator = v),
-            "Approve one prompt when Trainer Deck starts instead of one per trainer. Applies next time Trainer Deck starts."));
 
         rows.Add(new HeaderRow("Cheats"));
         rows.Add(new ToggleRow("In-game controller shortcuts", Current.CheatShortcutsEnabled, v => _s.Settings.Update(s => s.CheatShortcutsEnabled = v),
@@ -107,6 +115,14 @@ public sealed class SettingsViewModel : RowListPageViewModel
 
         SetRows(rows);
         HintsChanged();
+    }
+
+    private void SetRunAsAdministrator(bool value)
+    {
+        _s.Settings.Update(s => s.RunAsAdministrator = value);
+        Main.ShowMessage(value
+            ? _s.IsElevated ? "Trainer Deck will always start as administrator." : "Applies the next time Trainer Deck starts, or restart now from here."
+            : "Trainer Deck will start without administrator rights next time.");
     }
 
     private void AddFolder()

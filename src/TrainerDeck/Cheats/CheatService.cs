@@ -1,3 +1,4 @@
+using TrainerDeck.Art;
 using TrainerDeck.Core.Cheats;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
@@ -23,15 +24,18 @@ public sealed class CheatService
     private readonly TrainerLibrary _library;
     private readonly LaunchService _launcher;
     private readonly SettingsStore _settings;
+    private readonly ArtService _art;
     private readonly object _gate = new();
+    private readonly HashSet<int> _coverAttempts = new();
     private readonly Dictionary<string, TrainerSession> _sessions = new(StringComparer.Ordinal);
     private volatile GamepadButtons _activeModifier;
 
-    public CheatService(TrainerLibrary library, LaunchService launcher, SettingsStore settings, bool elevated)
+    public CheatService(TrainerLibrary library, LaunchService launcher, SettingsStore settings, ArtService art, bool elevated)
     {
         _library = library;
         _launcher = launcher;
         _settings = settings;
+        _art = art;
         IsElevated = elevated;
         _launcher.Running.Changed += (_, _) => OnRunningChanged();
         _settings.Changed += (_, _) => RefreshShortcutState();
@@ -44,6 +48,8 @@ public sealed class CheatService
     public GamepadButtons ConfiguredModifier => ParseButtons(_settings.Current.CheatShortcutModifier);
 
     public event EventHandler? ShortcutStateChanged;
+
+    public event Action<string>? CoverCaptured;
 
     public async Task<SessionSnapshot> ConnectAsync(string trainerId)
     {
@@ -61,6 +67,7 @@ public sealed class CheatService
         if (snapshot.Options.Count > 0)
         {
             SaveCache(trainerId, snapshot.Options);
+            _ = CaptureCoverIfMissingAsync(trainerId, session);
             return snapshot;
         }
 
@@ -208,6 +215,52 @@ public sealed class CheatService
         }
 
         RefreshShortcutState();
+        foreach (var (id, pid) in live)
+        {
+            _ = AutoConnectAsync(id, pid);
+        }
+    }
+
+    private async Task AutoConnectAsync(string trainerId, int pid)
+    {
+        lock (_gate)
+        {
+            if (_art.HasTrainerCover(trainerId) || !_coverAttempts.Add(pid))
+            {
+                return;
+            }
+        }
+
+        if (!IsElevated && LaunchNative.IsProcessElevated(pid) == true)
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+        if (_launcher.Running.TryGet(trainerId)?.ProcessId == pid)
+        {
+            await ConnectAsync(trainerId).ConfigureAwait(false);
+        }
+    }
+
+    private async Task CaptureCoverIfMissingAsync(string trainerId, TrainerSession session)
+    {
+        if (_art.HasTrainerCover(trainerId))
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+        System.Windows.Media.Imaging.BitmapSource? cover = await session.CaptureCoverAsync().ConfigureAwait(false);
+        if (cover is null)
+        {
+            Log.Info($"Cheats: no game cover found in the trainer window for {trainerId}.");
+            return;
+        }
+
+        _art.SaveTrainerCover(trainerId, cover);
+        Log.Info($"Cheats: saved the game cover from the trainer window ({cover.PixelWidth}x{cover.PixelHeight}).");
+        CoverCaptured?.Invoke(trainerId);
     }
 
     private void RefreshShortcutState()

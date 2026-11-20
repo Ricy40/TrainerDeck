@@ -89,6 +89,9 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </Button>
+                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding OpenFolderCommand}" ToolTip="Open trainer folder" Focusable="False">
+                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphFolder}" FontSize="16" />
+                </Button>
                 <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
                     <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
                 </Button>

@@ -7,15 +7,28 @@ namespace TrainerDeck.UI.ViewModels;
 
 public sealed partial class TrainerCardViewModel : ObservableObject
 {
+    private readonly Brush _nameBackground;
     private bool _artRequested;
     private int _coverVersion;
+    private Brush? _iconBackground;
 
     public TrainerCardViewModel(TrainerEntry entry)
     {
         Entry = entry;
         Refresh(entry);
-        artBackground = ColorTools.CardGradient(ColorTools.FromName(entry.DisplayName));
+        _nameBackground = ColorTools.CardGradient(ColorTools.FromName(entry.DisplayName));
+        artBackground = _nameBackground;
     }
+
+    public string? IconFingerprint { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayIcon))]
+    private bool isGenericIcon;
+
+    public ImageSource? DisplayIcon => IsGenericIcon ? null : Icon;
+
+    partial void OnIsGenericIconChanged(bool value) => ArtBackground = value || _iconBackground is null ? _nameBackground : _iconBackground;
 
     public TrainerEntry Entry { get; private set; }
 
@@ -39,6 +52,7 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     private bool isRunning;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayIcon))]
     private ImageSource? icon;
 
     [ObservableProperty]
@@ -84,10 +98,17 @@ public sealed partial class TrainerCardViewModel : ObservableObject
         }
 
         Brush background = ColorTools.CardGradient(result.Accent);
+        art.NoteIcon(result.Fingerprint, Id);
         _ = dispatcher.BeginInvoke(() =>
         {
+            IconFingerprint = result.Fingerprint;
+            _iconBackground = background;
+            IsGenericIcon = art.IsGenericIcon(result.Fingerprint);
             Icon = result.Image;
-            ArtBackground = background;
+            if (!IsGenericIcon)
+            {
+                ArtBackground = background;
+            }
         });
     }
 

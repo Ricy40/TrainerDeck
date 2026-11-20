@@ -228,6 +228,36 @@ public sealed partial class TrainerSession
         }
     }
 
+    public Task<System.Windows.Media.Imaging.BitmapSource?> CaptureCoverAsync() => Run(() =>
+    {
+        IntPtr hwnd = LaunchNative.TopLevelWindows(ProcessId).FirstOrDefault();
+        if (hwnd == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        _root ??= AutomationElement.FromHandle(hwnd);
+        Rect window = _root.Current.BoundingRectangle;
+        AutomationElement? cover = _root.FindFirst(TreeScope.Descendants, new PropertyCondition(IdProp, "m_picturebox_gamecover"));
+        Rect region = cover?.Current.BoundingRectangle ?? Rect.Empty;
+
+        if (region.IsEmpty && Status == SessionStatus.HotkeysOnly)
+        {
+            region = _root.FindAll(TreeScope.Descendants, Condition.TrueCondition)
+                .Cast<AutomationElement>()
+                .Select(e => (e.Current.Name, e.Current.BoundingRectangle))
+                .Where(e => string.IsNullOrEmpty(e.Name) && !e.BoundingRectangle.IsEmpty
+                    && e.BoundingRectangle.Width is >= 150 and <= 420 && e.BoundingRectangle.Height is >= 150 and <= 520
+                    && e.BoundingRectangle.Right <= window.X + (window.Width / 2)
+                    && e.BoundingRectangle.Height >= e.BoundingRectangle.Width * 0.9)
+                .OrderByDescending(e => e.BoundingRectangle.Width * e.BoundingRectangle.Height)
+                .Select(e => e.BoundingRectangle)
+                .FirstOrDefault();
+        }
+
+        return region.IsEmpty || region.Width < 64 ? null : WindowCapture.CaptureRegion(hwnd, region);
+    });
+
     private void ReadLegacy()
     {
         var labels = new List<TextLabel>();

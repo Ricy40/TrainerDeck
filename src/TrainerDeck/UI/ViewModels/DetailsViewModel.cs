@@ -130,7 +130,10 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
         rows.Add(new ActionRow("Rename", Glyphs.Rename, StartRename, "Rename",
             m.DisplayName is null ? null : $"Detected name: {Entry.File.Parsed.GameName}"));
         rows.Add(new ActionRow("Change art", Glyphs.Image, PickArt, "Choose",
-            m.ArtPath is not null ? "Using your own image" : appId is not null ? "Using Steam art" : "Using the trainer's icon",
+            m.ArtPath is not null ? "Using your own image"
+                : appId is not null ? "Using Steam art"
+                : _s.Art.HasTrainerCover(Card.Id) ? "Using the cover from the trainer window"
+                : "No game art yet: run the trainer once, or choose an image",
             m.ArtPath is null ? null : ResetArt, "Use default art"));
         rows.Add(new ActionRow("Show in folder", Glyphs.Folder, () => Main.Library.ShowInFolder(Card), "Open", Entry.File.Directory));
         if (appId is int linked)
