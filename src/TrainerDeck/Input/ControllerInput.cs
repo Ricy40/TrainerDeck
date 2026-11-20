@@ -19,13 +19,16 @@ public sealed class ControllerInput : IDisposable
     private HwndSource? _hwndSource;
     private IntPtr _hwnd;
 
-    public ControllerInput(Window window, Action<InputAction, ControllerKind> onAction, Action<string, bool> onConnectionChanged)
+    public ControllerInput(Window window, Action<InputAction, ControllerKind> onAction, Action<string, bool> onConnectionChanged,
+        Func<GamepadButtons>? chordModifier = null, Action<GamepadButtons>? onChord = null)
     {
         _window = window;
         _xinput.ConnectionChanged += onConnectionChanged;
         _hid.ConnectionChanged += onConnectionChanged;
-        _poller = new GamepadPoller([_xinput, _hid], ControllerMapping.Default, IsWindowActive, onAction);
+        _poller = new GamepadPoller([_xinput, _hid], ControllerMapping.Default, IsWindowActive, onAction, chordModifier, onChord);
     }
+
+    public void Wake() => _poller.Wake();
 
     public void Start()
     {

@@ -138,6 +138,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void OpenDetails(TrainerCardViewModel card) => Push(new DetailsViewModel(this, card));
 
+    public void OpenCheats(TrainerCardViewModel card) => Push(new CheatsViewModel(this, card));
+
+    public event Action? RestartElevatedRequested;
+
+    public void RequestRestartElevated()
+    {
+        Settings.Update(s => s.RunAsAdministrator = true);
+        RestartElevatedRequested?.Invoke();
+    }
+
     public void OpenSettings()
     {
         if (CurrentPage is not SettingsViewModel)

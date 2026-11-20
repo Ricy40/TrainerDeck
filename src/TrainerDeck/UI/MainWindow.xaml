@@ -18,6 +18,9 @@
         <DataTemplate DataType="{x:Type vm:IgnorePatternsViewModel}">
             <views:IgnorePatternsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TextEntryViewModel}">
+            <views:TextEntryView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:RowListPageViewModel}">
             <views:RowListView />
         </DataTemplate>

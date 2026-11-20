@@ -1,4 +1,5 @@
 using TrainerDeck.Art;
+using TrainerDeck.Cheats;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.Launch;
@@ -13,4 +14,5 @@ public sealed record AppServices(
     SteamService Steam,
     SettingsStore Settings,
     PortablePaths Paths,
-    bool IsElevated);
+    bool IsElevated,
+    CheatService Cheats);

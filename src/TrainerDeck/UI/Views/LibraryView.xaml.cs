@@ -155,7 +155,7 @@ public partial class LibraryView : UserControl, IPageView
 
         _vm.Selected = card;
         var menu = new ContextMenu { PlacementTarget = item, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
-        menu.Items.Add(MenuItem(card.IsRunning ? "Switch to" : "Launch", "", _vm.ActivateCommand, card));
+        menu.Items.Add(MenuItem(card.IsRunning ? "Cheats" : "Launch", "", _vm.ActivateCommand, card));
         if (card.IsRunning)
         {
             menu.Items.Add(MenuItem("Close trainer", "", _vm.CloseTrainerCommand, card));

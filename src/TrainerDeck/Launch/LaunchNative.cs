@@ -91,6 +91,33 @@ internal static class LaunchNative
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool AllowSetForegroundWindow(int processId);
 
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool OpenProcessToken(SafeProcessHandle process, uint access, out SafeAccessTokenHandle token);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetTokenInformation(SafeAccessTokenHandle token, int infoClass, out int info, int length, out int returned);
+
+    public static bool? IsProcessElevated(int processId)
+    {
+        using SafeProcessHandle p = OpenProcess(ProcessQueryLimitedInformation, false, processId);
+        if (p.IsInvalid)
+        {
+            return null;
+        }
+
+        if (!OpenProcessToken(p, 0x0008, out SafeAccessTokenHandle token))
+        {
+            return Marshal.GetLastWin32Error() == 5 ? true : null;
+        }
+
+        using (token)
+        {
+            return GetTokenInformation(token, 20, out int elevated, sizeof(int), out _) ? elevated != 0 : null;
+        }
+    }
+
     public static List<IntPtr> TopLevelWindows(int processId)
     {
         var result = new List<IntPtr>();

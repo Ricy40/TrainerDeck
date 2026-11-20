@@ -103,10 +103,16 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
         int? appId = m.SteamAppId;
         bool steamInstalled = appId is int id && _s.Steam.IsInstalled(id);
 
-        var rows = new List<RowViewModel>
+        var rows = new List<RowViewModel>();
+        if (running)
         {
-            new ActionRow(running ? "Switch to trainer" : "Launch trainer", Glyphs.Play, () => _ = Main.Library.Activate(Card), running ? "Switch to" : "Launch"),
-        };
+            rows.Add(new ActionRow("Cheats", Glyphs.Game, () => Main.OpenCheats(Card), "Open", "Turn cheats on and off with the controller"));
+            rows.Add(new ActionRow("Show trainer window", Glyphs.View, () => Main.Services.Launcher.Tracker.BringToFront(Main.Services.Launcher.Running.TryGet(Card.Id)?.ProcessId ?? 0), "Switch to"));
+        }
+        else
+        {
+            rows.Add(new ActionRow("Launch trainer", Glyphs.Play, () => _ = Main.Library.Activate(Card), "Launch"));
+        }
 
         if (steamInstalled)
         {

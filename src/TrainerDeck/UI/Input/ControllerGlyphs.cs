@@ -96,4 +96,28 @@ public static class ControllerGlyphs
             _ => new("✥", false, Neutral),
         },
     };
+
+    // Readable name for one or more buttons, e.g. "View + A" or "D-pad ↑".
+    public static string Describe(GamepadButtons buttons, ControllerKind kind)
+    {
+        var parts = new List<string>();
+        foreach (GamepadButtons b in Enum.GetValues<GamepadButtons>())
+        {
+            if (b == GamepadButtons.None || (buttons & b) != b)
+            {
+                continue;
+            }
+
+            parts.Add(b switch
+            {
+                GamepadButtons.DPadUp => "D-pad ↑",
+                GamepadButtons.DPadDown => "D-pad ↓",
+                GamepadButtons.DPadLeft => "D-pad ←",
+                GamepadButtons.DPadRight => "D-pad →",
+                _ => For(b, kind).Text,
+            });
+        }
+
+        return string.Join(" + ", parts);
+    }
 }

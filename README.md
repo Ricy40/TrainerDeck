@@ -45,7 +45,7 @@ Trainers modify game memory, so antivirus tools often flag them or quietly delet
 | Action | Controller | Keyboard |
 |---|---|---|
 | Move | D-pad / left stick (holding repeats) | Arrow keys |
-| Launch / select | A (✕) | Enter |
+| Launch / select (opens Cheats on a running trainer) | A (✕) | Enter |
 | Back / clear search | B (○) | Esc |
 | Favourite | X (□) | Ctrl+D |
 | Details | Y (△) | Ctrl+I |
@@ -71,6 +71,28 @@ The Ally X's back paddles can send keyboard keys, which is handy for trainer hot
 - **After launch:** Trainer Deck brings the trainer's window to the front. Then it stays open, minimises (the default) or closes, per **Settings › After launching a trainer**.
 - **Running trainers:** a green **Running** badge shows on each one, including trainers you started another way. Press A on a running trainer to switch to it. **Close trainer** is on the details page (Y) and the right-click menu.
 - **Run Trainer Deck as administrator** (Settings): Trainer Deck asks for admin rights once when it starts, so trainers launch without a prompt each time. This also lets Close trainer work on any trainer. The trade-off is one UAC prompt every time Trainer Deck starts. Steam games are still started without admin rights.
+
+## Cheats panel (controller remote for trainers)
+
+FLiNG trainers expect a keyboard with a numpad. Trainer Deck lets you use them with a controller instead:
+
+- **Opening it:** press **A** on a running trainer, or pick **Cheats** on its details page, to open its cheat list. Each cheat shows its hotkey, its on/off state and its value.
+- **A:** turns a cheat on or off, or runs a one-off action such as "Edit Runes".
+- **←/→:** adjust multipliers (game speed, damage…).
+- **Y:** type a value, or pick from a list (teleport spots, save locations). These lists fill in once the game is running.
+- **X:** assign a controller shortcut (see below).
+
+**How it works:**
+- **Current FLiNG trainers:** Trainer Deck reads the trainer's window through Windows accessibility (UI Automation) and presses the trainer's own switches. What you see is the trainer's real state, kept in sync even if you also use the keyboard.
+- **Older trainers:** for example Hades v1.38, Trainer Deck reads the cheat names and presses their hotkeys for you. It can't see whether a cheat is on, so listen for the trainer's beep.
+- **Administrator rights:** trainers run as administrator, and Windows only lets a program read another program's window when it has the same rights. Turn on **Settings › Run Trainer Deck as administrator** to get the full panel (the panel offers a one-click restart). Without it, the panel falls back to pressing hotkeys, using the cheat list from the last time the trainer was read.
+
+### In-game controller shortcuts
+
+Turn on **Settings › Cheats › In-game controller shortcuts**, then assign shortcuts per cheat with **X** in the Cheats panel. While you play, hold the shortcut button (View by default; LB + RB, a stick click or View + Menu also work) and press the assigned button.
+
+- **Background reading:** Trainer Deck reads the controller in the background only while shortcuts are on *and* a trainer with shortcuts assigned is running. Everything else is still ignored when Trainer Deck isn't in front.
+- **The game sees the buttons too.** Pick combinations the game doesn't use at the same time, or a shortcut button the game ignores.
 
 ## Steam
 

@@ -107,6 +107,62 @@
         </DataTemplate.Triggers>
     </DataTemplate>
 
+    <!-- Cheat: hotkey chip, name, value, controller shortcut, on/off switch -->
+    <DataTemplate DataType="{x:Type vm:CheatRow}">
+        <Grid x:Name="Root" Margin="16,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="128" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border HorizontalAlignment="Left" VerticalAlignment="Center" Background="{StaticResource SurfaceHigherBrush}" CornerRadius="6" Padding="8,3"
+                    Visibility="{Binding HasHotkey, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding HotkeyText}" Style="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Detail}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,12,0"
+                               Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0" Foreground="{StaticResource AccentBrush}"
+                               Visibility="{Binding HasShortcut, Converter={StaticResource BoolToVisibility}}">
+                        <Run Text="&#xE7FC;" FontFamily="{StaticResource IconFont}" /><Run Text="  " /><Run Text="{Binding ShortcutText, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+            <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0" Padding="12,4" CornerRadius="8"
+                    Background="{StaticResource BackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    Visibility="{Binding HasValue, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding Value}" Style="{StaticResource TextBase}" FontSize="16" FontWeight="SemiBold"
+                           Foreground="{StaticResource AccentBrush}" MinWidth="44" TextAlignment="Center" />
+            </Border>
+            <Grid Grid.Column="3" Width="48" VerticalAlignment="Center">
+                <Border x:Name="Track" Width="48" Height="26" CornerRadius="13"
+                        Background="{StaticResource SurfaceHigherBrush}" BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="1">
+                    <Ellipse x:Name="Knob" Width="18" Height="18" Margin="4,0" HorizontalAlignment="Left" Fill="{StaticResource TextSecondaryBrush}" />
+                </Border>
+                <TextBlock x:Name="ActionGlyph" Text="&#xE768;" Style="{StaticResource Glyph}" FontSize="18" HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
+            </Grid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsOn}" Value="True">
+                <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentBrush}" />
+                <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
+                <Setter TargetName="Knob" Property="Fill" Value="{StaticResource BackgroundBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding StateKnown}" Value="False">
+                <Setter TargetName="Track" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="ActionGlyph" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                <Setter TargetName="Root" Property="Opacity" Value="0.4" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:ChoiceRow}">
         <Grid Margin="16,12">
             <Grid.ColumnDefinitions>

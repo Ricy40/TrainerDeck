@@ -11,6 +11,15 @@ public sealed class SettingsViewModel : RowListPageViewModel
 {
     private static readonly string[] AfterLaunchOptions = ["Stay open", "Minimise", "Close Trainer Deck"];
 
+    private static readonly (string Label, string Value)[] ShortcutModifiers =
+    [
+        ("View", "Back"),
+        ("LB + RB", "LeftShoulder|RightShoulder"),
+        ("Left stick click", "LeftThumb"),
+        ("Right stick click", "RightThumb"),
+        ("View + Menu", "Back|Start"),
+    ];
+
     private readonly AppServices _s;
     private readonly EventHandler _onLibrary;
 
@@ -69,6 +78,15 @@ public sealed class SettingsViewModel : RowListPageViewModel
             i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)));
         rows.Add(new ToggleRow("Run Trainer Deck as administrator", Current.RunAsAdministrator, v => _s.Settings.Update(s => s.RunAsAdministrator = v),
             "Approve one prompt when Trainer Deck starts instead of one per trainer. Applies next time Trainer Deck starts."));
+
+        rows.Add(new HeaderRow("Cheats"));
+        rows.Add(new ToggleRow("In-game controller shortcuts", Current.CheatShortcutsEnabled, v => _s.Settings.Update(s => s.CheatShortcutsEnabled = v),
+            "Trigger cheats while you play: hold the button below and press the one assigned in a trainer's Cheats panel. "
+            + "Only active while a trainer with shortcuts is running."));
+        int modifierIndex = Array.FindIndex(ShortcutModifiers, m => string.Equals(m.Value, Current.CheatShortcutModifier, StringComparison.OrdinalIgnoreCase));
+        rows.Add(new ChoiceRow("Shortcut button to hold", ShortcutModifiers.Select(m => m.Label).ToArray(), Math.Max(0, modifierIndex),
+            i => _s.Settings.Update(s => s.CheatShortcutModifier = ShortcutModifiers[i].Value),
+            "Hold this, then press the button assigned to a cheat"));
 
         rows.Add(new HeaderRow("Display"));
         rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),

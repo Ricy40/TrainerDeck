@@ -25,6 +25,10 @@ public sealed class AppSettings
 
     public bool AntivirusNoticeDismissed { get; set; }
 
+    public bool CheatShortcutsEnabled { get; set; }
+
+    public string CheatShortcutModifier { get; set; } = "Back";
+
     public IReadOnlyList<string> EffectiveTrainerFolders(PortablePaths paths) =>
         TrainerFolders.Count > 0 ? TrainerFolders : [paths.DefaultTrainersDirectory];
 }

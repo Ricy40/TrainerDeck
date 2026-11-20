@@ -23,7 +23,13 @@ public sealed class TrainerMetadata
     public int? SteamAppId { get; set; }
 
     public bool SteamAppIdLocked { get; set; }
+
+    public List<CachedCheat>? Cheats { get; set; }
+
+    public Dictionary<string, string>? CheatShortcuts { get; set; }
 }
+
+public sealed record CachedCheat(string Name, string? Hotkey, TrainerDeck.Core.Cheats.CheatKind Kind);
 
 public sealed class LibraryDocument
 {

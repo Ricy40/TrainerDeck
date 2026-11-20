@@ -49,6 +49,16 @@ public sealed partial class LibraryViewModel : PageViewModel
     private void OpenSettings() => _main.OpenSettings();
 
     [RelayCommand]
+    private void OpenCheats(TrainerCardViewModel? card)
+    {
+        if (card is not null)
+        {
+            Selected = card;
+            _main.OpenCheats(card);
+        }
+    }
+
+    [RelayCommand]
     private void OpenDetails(TrainerCardViewModel? card)
     {
         if (card is not null)
@@ -129,7 +139,7 @@ public sealed partial class LibraryViewModel : PageViewModel
         new(InputAction.Back, "Cancel"),
     ]
     : [
-        new(InputAction.Activate, Selected?.IsRunning == true ? "Switch to" : "Launch"),
+        new(InputAction.Activate, Selected?.IsRunning == true ? "Cheats" : "Launch"),
         new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"),
         new(InputAction.Details, "Details"),
         new(InputAction.NextTab, "Switch tab", "Tab · hold for A–Z"),
@@ -350,10 +360,13 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
 
         Selected = card;
-        if (!card.IsRunning)
+        if (card.IsRunning)
         {
-            _main.ShowMessage($"Launching {card.Title}…");
+            _main.OpenCheats(card);
+            return;
         }
+
+        _main.ShowMessage($"Launching {card.Title}…");
 
         LaunchResult result = await _launcher.LaunchAsync(card.Entry);
         switch (result.Outcome)

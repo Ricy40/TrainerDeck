@@ -15,4 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TrainerDeck.Core\TrainerDeck.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Cheats\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

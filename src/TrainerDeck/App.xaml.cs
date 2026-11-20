@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using TrainerDeck.Art;
+using TrainerDeck.Cheats;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Input;
@@ -74,7 +75,10 @@ public partial class App : Application
 
         MainWindow? window = null;
         _launcher = new LaunchService(_library, () => window is null ? IntPtr.Zero : new WindowInteropHelper(window).Handle);
-        _main = new MainViewModel(new AppServices(_library, art, _launcher, steam, settings, paths, elevated), Dispatcher);
+        var cheats = new CheatService(_library, _launcher, settings, elevated);
+        _main = new MainViewModel(new AppServices(_library, art, _launcher, steam, settings, paths, elevated, cheats), Dispatcher);
+        string[] args = e.Args;
+        _main.RestartElevatedRequested += () => RestartElevated(args);
         window = new MainWindow(_main, settings);
         MainWindow = window;
         window.Show();
@@ -99,8 +103,23 @@ public partial class App : Application
         _controllers = new ControllerInput(
             window,
             (action, kind) => Dispatcher.BeginInvoke(() => main.Handle(action, InputSource.Controller, kind)),
-            (name, connected) => Dispatcher.BeginInvoke(() => main.OnControllerConnectionChanged(name, connected)));
+            (name, connected) => Dispatcher.BeginInvoke(() => main.OnControllerConnectionChanged(name, connected)),
+            () => cheats.ActiveShortcutModifier,
+            cheats.OnChord);
+        cheats.ShortcutStateChanged += (_, _) => _controllers?.Wake();
         _controllers.Start();
+    }
+
+    private void RestartElevated(string[] args)
+    {
+        if (TryRelaunchElevated(args.Where(a => !a.Equals(StartupOptions.ElevatedFlag, StringComparison.OrdinalIgnoreCase)).ToArray()))
+        {
+            Shutdown();
+        }
+        else
+        {
+            _main?.ShowMessage("Still running without administrator rights.");
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
