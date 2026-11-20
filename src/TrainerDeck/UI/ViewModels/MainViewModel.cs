@@ -10,7 +10,7 @@ using TrainerDeck.UI.Input;
 
 namespace TrainerDeck.UI.ViewModels;
 
-public sealed record HintViewModel(string Key, string Label);
+public sealed record HintViewModel(string Key, string Label, bool Round, System.Windows.Media.Brush KeyBrush);
 
 public sealed partial class MainViewModel : ObservableObject
 {
@@ -44,10 +44,20 @@ public sealed partial class MainViewModel : ObservableObject
 
     public event EventHandler? ToggleFullScreenRequested;
 
+    [ObservableProperty]
+    private ControllerKind lastControllerKind = ControllerKind.Xbox;
+
     partial void OnLastDeviceChanged(InputSource value) => RebuildHints();
 
-    public bool Handle(InputAction action, InputSource device)
+    partial void OnLastControllerKindChanged(ControllerKind value) => RebuildHints();
+
+    public bool Handle(InputAction action, InputSource device, ControllerKind kind = ControllerKind.Xbox)
     {
+        if (device == InputSource.Controller)
+        {
+            LastControllerKind = kind;
+        }
+
         LastDevice = device;
         if (action == InputAction.ToggleFullScreen)
         {
@@ -116,9 +126,29 @@ public sealed partial class MainViewModel : ObservableObject
 
         foreach (FooterHint hint in CurrentPage.Hints)
         {
-            Hints.Add(new HintViewModel(KeyboardMap.Label(hint.Action), hint.Label));
+            if (LastDevice == InputSource.Controller)
+            {
+                ButtonGlyph g = ControllerGlyphs.For(hint.Action, LastControllerKind, ControllerMapping.Default);
+                Hints.Add(new HintViewModel(g.Text, hint.Label, g.Round, Frozen(g.Color)));
+            }
+            else
+            {
+                Hints.Add(new HintViewModel(KeyboardMap.Label(hint.Action), hint.Label, false, Frozen(KeyCapText)));
+            }
         }
     }
+
+    private static readonly System.Windows.Media.Color KeyCapText = System.Windows.Media.Color.FromRgb(0xF3, 0xF5, 0xF9);
+
+    private static System.Windows.Media.Brush Frozen(System.Windows.Media.Color c)
+    {
+        var b = new System.Windows.Media.SolidColorBrush(c);
+        b.Freeze();
+        return b;
+    }
+
+    public void OnControllerConnectionChanged(string name, bool connected) =>
+        ShowMessage(connected ? $"{name} connected" : $"{name} disconnected");
 
     public void ShowMessage(string text)
     {

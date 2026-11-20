@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Threading;
 using TrainerDeck.Art;
 using TrainerDeck.Core.Diagnostics;
+using TrainerDeck.Core.Input;
+using TrainerDeck.Input;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.UI;
@@ -14,6 +16,7 @@ public partial class App : Application
 {
     private TrainerLibrary? _library;
     private MainViewModel? _main;
+    private ControllerInput? _controllers;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -36,10 +39,18 @@ public partial class App : Application
 
         _ = _library.RescanAsync();
         _library.StartWatching();
+
+        MainViewModel main = _main;
+        _controllers = new ControllerInput(
+            window,
+            (action, kind) => Dispatcher.BeginInvoke(() => main.Handle(action, InputSource.Controller, kind)),
+            (name, connected) => Dispatcher.BeginInvoke(() => main.OnControllerConnectionChanged(name, connected)));
+        _controllers.Start();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _controllers?.Dispose();
         _library?.Dispose();
         Log.Info("Exiting.");
         base.OnExit(e);
