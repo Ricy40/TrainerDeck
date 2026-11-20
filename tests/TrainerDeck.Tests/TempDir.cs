@@ -1,0 +1,33 @@
+namespace TrainerDeck.Tests;
+
+/// <summary>Disposable temp directory for file-system tests.</summary>
+internal sealed class TempDir : IDisposable
+{
+    public TempDir()
+    {
+        Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TrainerDeckTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path);
+    }
+
+    public string Path { get; }
+
+    /// <summary>Creates a file (and its folders) with <paramref name="bytes"/> bytes of content.</summary>
+    public string File(string relative, int bytes = 16)
+    {
+        string full = System.IO.Path.Combine(Path, relative.Replace('/', System.IO.Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(full)!);
+        System.IO.File.WriteAllBytes(full, new byte[bytes]);
+        return full;
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(Path, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+    }
+}

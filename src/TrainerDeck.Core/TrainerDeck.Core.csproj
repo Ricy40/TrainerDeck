@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Platform-neutral logic (parser, scanner, stores, input gating). No WPF, no Win32, so it is fully unit-testable. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>TrainerDeck.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TrainerDeck.Tests" />
+  </ItemGroup>
+</Project>
