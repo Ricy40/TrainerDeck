@@ -31,6 +31,39 @@ public sealed partial class LibraryViewModel : PageViewModel
         _main = main;
         _library.Changed += (_, _) => _dispatcher.BeginInvoke(OnLibraryChanged);
         _launcher.Running.Changed += (_, _) => _dispatcher.BeginInvoke(UpdateRunning);
+        _art.Steam.Changed += (_, _) => _dispatcher.BeginInvoke(ReloadCovers);
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPendingZips))]
+    private string? pendingZipsLabel;
+
+    public bool HasPendingZips => PendingZipsLabel is not null;
+
+    public int PendingZipCount => _library.PendingZips.Count;
+
+    [RelayCommand]
+    private void OpenZips() => _main.OpenZipImport();
+
+    [RelayCommand]
+    private void OpenSettings() => _main.OpenSettings();
+
+    [RelayCommand]
+    private void OpenDetails(TrainerCardViewModel? card)
+    {
+        if (card is not null)
+        {
+            Selected = card;
+            _main.OpenDetails(card);
+        }
+    }
+
+    private void ReloadCovers()
+    {
+        foreach (TrainerCardViewModel card in _cards.Values)
+        {
+            card.ReloadCover(_art, _dispatcher);
+        }
     }
 
     [ObservableProperty]
@@ -85,7 +118,7 @@ public sealed partial class LibraryViewModel : PageViewModel
         new(InputAction.Details, "Details"),
         new(InputAction.NextTab, "Switch tab"),
         new(InputAction.Sort, "Sort"),
-        new(InputAction.Back, HasSearch ? "Clear search" : "Back"),
+        HasSearch ? new(InputAction.Back, "Clear search") : new(InputAction.Settings, "Settings"),
     ];
 
     partial void OnTabChanged(LibraryTab value) => Refresh();
@@ -117,7 +150,7 @@ public sealed partial class LibraryViewModel : PageViewModel
             case InputAction.Details:
                 if (Selected is not null)
                 {
-                    _main.ShowMessage($"Details page arrives in milestone 5 ({Selected.Title}).");
+                    _main.OpenDetails(Selected);
                 }
 
                 return true;
@@ -129,9 +162,6 @@ public sealed partial class LibraryViewModel : PageViewModel
                 return true;
             case InputAction.Sort:
                 CycleSort();
-                return true;
-            case InputAction.Settings:
-                _main.ShowMessage("Settings arrive in milestone 5.");
                 return true;
             case InputAction.Rescan:
                 RescanCommand.Execute(null);
@@ -303,15 +333,9 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
 
         bool fav = !card.Entry.Meta.Favourite;
-        _library.Store.Update(card.Id, m => m.Favourite = fav);
-        _library.SaveMetadata();
+        _library.UpdateMetadata(card.Id, m => m.Favourite = fav);
         card.Refresh(card.Entry);
         _main.ShowMessage(fav ? $"Added {card.Title} to favourites" : $"Removed {card.Title} from favourites");
-        if (Tab == LibraryTab.Favourites)
-        {
-            Refresh();
-        }
-
         HintsChanged();
     }
 
@@ -359,6 +383,9 @@ public sealed partial class LibraryViewModel : PageViewModel
         Selected = list.FirstOrDefault(c => c.Id == keepId) ?? list.FirstOrDefault();
         UpdateEmptyState(all.Count, visible.Count);
         Summary = all.Count == 1 ? "1 trainer" : $"{all.Count} trainers";
+        int zips = _library.PendingZips.Count;
+        PendingZipsLabel = zips == 0 ? null : zips == 1 ? "1 zip file to extract" : $"{zips} zip files to extract";
+        OnPropertyChanged(nameof(PendingZipCount));
     }
 
     private void UpdateEmptyState(int total, int visible)

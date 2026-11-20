@@ -27,6 +27,13 @@ public partial class MainWindow : Window
 
         vm.ToggleFullScreenRequested += (_, _) => ToggleFullScreen();
         vm.AfterLaunchRequested += OnAfterLaunch;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.CurrentPage))
+            {
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, FocusPage);
+            }
+        };
         SourceInitialized += (_, _) => WindowInterop.ApplyDarkTitleBar(this, (Color)FindResource("BackgroundColor"));
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewTextInput += OnPreviewTextInput;
@@ -51,6 +58,14 @@ public partial class MainWindow : Window
         Topmost = true;
         Topmost = false;
         Focus();
+    }
+
+    private void FocusPage()
+    {
+        if (WindowInterop.FindDescendant<UserControl>(PageHost) is IPageView view)
+        {
+            view.FocusDefault();
+        }
     }
 
     private void OnAfterLaunch(AfterLaunchBehavior behavior)
@@ -80,7 +95,7 @@ public partial class MainWindow : Window
 
         if (Keyboard.FocusedElement is TextBox box)
         {
-            e.Handled = HandleSearchBoxKey(box, key, mods);
+            e.Handled = box.Name == "SearchBox" ? HandleSearchBoxKey(box, key, mods) : HandleTextBoxKey(box, key, mods);
             return;
         }
 
@@ -95,6 +110,22 @@ public partial class MainWindow : Window
         if (KeyboardMap.Map(key, mods) is InputAction action)
         {
             e.Handled = _vm.Handle(action, InputSource.Keyboard);
+        }
+    }
+
+
+    private bool HandleTextBoxKey(TextBox box, Key key, ModifierKeys mods)
+    {
+        switch (key)
+        {
+            case Key.Escape:
+                return _vm.Handle(InputAction.Back, InputSource.Keyboard);
+            case Key.Enter when !box.AcceptsReturn && mods == ModifierKeys.None:
+                return _vm.Handle(InputAction.Activate, InputSource.Keyboard);
+            case Key.F11:
+                return _vm.Handle(InputAction.ToggleFullScreen, InputSource.Keyboard);
+            default:
+                return false;
         }
     }
 

@@ -44,6 +44,8 @@ public sealed class TrainerLibrary : IDisposable
 
     public event EventHandler? Changed;
 
+    public event EventHandler? Scanned;
+
     public async Task RescanAsync()
     {
         if (!await _scanLock.WaitAsync(0).ConfigureAwait(false))
@@ -106,10 +108,23 @@ public sealed class TrainerLibrary : IDisposable
         {
             IsScanning = false;
             RaiseChanged();
+            Scanned?.Invoke(this, EventArgs.Empty);
         }
     }
 
     public void SaveMetadata() => TrySave();
+
+    public bool UpdateMetadata(string id, Action<TrainerMetadata> change)
+    {
+        if (!Store.Update(id, change))
+        {
+            return false;
+        }
+
+        TrySave();
+        RaiseChanged();
+        return true;
+    }
 
     public void RecordLaunch(string id)
     {

@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xmlns:ui="clr-namespace:TrainerDeck.UI">
 
     <!-- Palette: near-black blue-greys, one cool accent, warm gold for favourites, green for running. -->
     <Color x:Key="BackgroundColor">#0D0F13</Color>
@@ -54,6 +55,8 @@
     <sys:String x:Key="GlyphClear">&#xE711;</sys:String>
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <ui:NullToVisibilityConverter x:Key="NullToVisibility" />
+    <ui:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
 
     <sys:Double x:Key="PageGutter">40</sys:Double>
     <Thickness x:Key="PageGutterThickness">40,0,40,0</Thickness>

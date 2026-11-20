@@ -7,6 +7,7 @@ using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Input;
 using TrainerDeck.Launch;
+using TrainerDeck.Steam;
 using TrainerDeck.Core.Launch;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
@@ -59,11 +60,12 @@ public partial class App : Application
 
         var store = LibraryStore.Load(paths.LibraryFile, Log.Warn);
         _library = new TrainerLibrary(settings, paths, store);
-        var art = new ArtService(paths.CacheDirectory);
+        var steam = new SteamService(_library, settings, paths);
+        var art = new ArtService(paths, steam);
 
         MainWindow? window = null;
         _launcher = new LaunchService(_library, () => window is null ? IntPtr.Zero : new WindowInteropHelper(window).Handle);
-        _main = new MainViewModel(_library, art, settings, _launcher, Dispatcher);
+        _main = new MainViewModel(new AppServices(_library, art, _launcher, steam, settings, paths, elevated), Dispatcher);
         window = new MainWindow(_main, settings);
         MainWindow = window;
         window.Show();
@@ -73,6 +75,13 @@ public partial class App : Application
         {
             _main.ShowMessage("Running without administrator rights.");
         }
+
+        if (!settings.Current.AntivirusNoticeDismissed)
+        {
+            _main.OpenAntivirusNotice();
+        }
+
+        _library.Scanned += (_, _) => _ = steam.RefreshAsync();
 
         _ = _library.RescanAsync();
         _library.StartWatching();

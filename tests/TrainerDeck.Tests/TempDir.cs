@@ -18,6 +18,13 @@ internal sealed class TempDir : IDisposable
         return full;
     }
 
+    public string File(string relative, string text)
+    {
+        string full = File(relative, 0);
+        System.IO.File.WriteAllText(full, text);
+        return full;
+    }
+
     public void Dispose()
     {
         try

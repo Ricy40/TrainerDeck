@@ -11,5 +11,15 @@ public abstract class PageViewModel : ObservableObject
 
     public abstract IReadOnlyList<FooterHint> Hints { get; }
 
+
+    public virtual void OnClosed()
+    {
+    }
+
+
+    public virtual void OnResumed()
+    {
+    }
+
     protected void HintsChanged() => OnPropertyChanged(nameof(Hints));
 }

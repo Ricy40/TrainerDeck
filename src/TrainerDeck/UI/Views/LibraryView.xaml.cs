@@ -9,7 +9,7 @@ using TrainerDeck.UI.ViewModels;
 
 namespace TrainerDeck.UI.Views;
 
-public partial class LibraryView : UserControl
+public partial class LibraryView : UserControl, IPageView
 {
     private CardGridPanel? _panel;
     private ScrollViewer? _scroller;
@@ -24,6 +24,8 @@ public partial class LibraryView : UserControl
     }
 
     public bool IsSearchFocused => SearchBox.IsKeyboardFocusWithin;
+
+    public void FocusDefault() => FocusGrid();
 
     public void FocusGrid()
     {
@@ -125,6 +127,7 @@ public partial class LibraryView : UserControl
         }
 
         menu.Items.Add(MenuItem(card.IsFavourite ? "Remove from favourites" : "Add to favourites", card.IsFavourite ? "" : "", _vm.ToggleFavouriteCommand, card));
+        menu.Items.Add(MenuItem("Details", "", _vm.OpenDetailsCommand, card));
         menu.Items.Add(MenuItem("Show in folder", "", _vm.ShowInFolderCommand, card));
         menu.IsOpen = true;
         e.Handled = true;

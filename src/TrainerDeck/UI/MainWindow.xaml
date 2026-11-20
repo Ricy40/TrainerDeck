@@ -9,9 +9,17 @@
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Window.Resources>
-        <ui:NullToVisibilityConverter x:Key="NullToVisibility" />
         <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
             <views:LibraryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DetailsViewModel}">
+            <views:DetailsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:IgnorePatternsViewModel}">
+            <views:IgnorePatternsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RowListPageViewModel}">
+            <views:RowListView />
         </DataTemplate>
     </Window.Resources>
 
@@ -21,7 +29,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ContentControl Content="{Binding CurrentPage}" Focusable="False" />
+        <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Focusable="False" />
 
         <!-- Footer: status message on the left, context button hints on the right -->
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"

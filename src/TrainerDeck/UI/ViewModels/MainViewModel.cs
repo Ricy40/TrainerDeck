@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using TrainerDeck.Art;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
@@ -21,13 +20,19 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly Stack<PageViewModel> _pages = new();
     private readonly DispatcherTimer _messageTimer;
 
-    public MainViewModel(TrainerLibrary library, ArtService art, SettingsStore settings, LaunchService launcher, Dispatcher dispatcher)
+    public MainViewModel(AppServices services, Dispatcher dispatcher)
     {
-        Settings = settings;
-        Library = new LibraryViewModel(library, art, launcher, dispatcher, this);
+        Services = services;
+        Dispatcher = dispatcher;
+        Settings = services.Settings;
+        Library = new LibraryViewModel(services.Library, services.Art, services.Launcher, dispatcher, this);
         _messageTimer = new DispatcherTimer(MessageDuration, DispatcherPriority.Normal, (_, _) => ClearMessage(), dispatcher) { IsEnabled = false };
         Push(Library);
     }
+
+    public AppServices Services { get; }
+
+    public Dispatcher Dispatcher { get; }
 
     public SettingsStore Settings { get; }
 
@@ -79,6 +84,12 @@ public sealed partial class MainViewModel : ObservableObject
             return true;
         }
 
+        if (action == InputAction.Settings)
+        {
+            OpenSettings();
+            return true;
+        }
+
         if (action == InputAction.Back && _pages.Count > 1)
         {
             Pop();
@@ -106,9 +117,51 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        _pages.Pop().PropertyChanged -= OnPagePropertyChanged;
-        SetCurrent(_pages.Peek());
+        PageViewModel closed = _pages.Pop();
+        closed.PropertyChanged -= OnPagePropertyChanged;
+        closed.OnClosed();
+        PageViewModel top = _pages.Peek();
+        SetCurrent(top);
+        top.OnResumed();
     }
+
+    public void PopTo(PageViewModel page)
+    {
+        while (_pages.Count > 1 && CurrentPage != page)
+        {
+            Pop();
+        }
+    }
+
+    public void OpenDetails(TrainerCardViewModel card) => Push(new DetailsViewModel(this, card));
+
+    public void OpenSettings()
+    {
+        if (CurrentPage is not SettingsViewModel)
+        {
+            Push(new SettingsViewModel(this));
+        }
+    }
+
+    public void OpenZipImport()
+    {
+        if (Services.Library.PendingZips.Count > 0)
+        {
+            Push(new ZipImportViewModel(this));
+        }
+        else
+        {
+            ShowMessage("There are no zip files waiting to be extracted.");
+        }
+    }
+
+    public void OpenAntivirusNotice() => Push(new NoticeViewModel(this));
+
+    public void PickFolder(string title, string? start, Action<string> picked) =>
+        Push(new FileBrowserViewModel(this, title, start, folderMode: true, picked));
+
+    public void PickImage(string title, string? start, Action<string> picked) =>
+        Push(new FileBrowserViewModel(this, title, start, folderMode: false, picked));
 
     private void SetCurrent(PageViewModel page)
     {

@@ -8,6 +8,7 @@ namespace TrainerDeck.UI.ViewModels;
 public sealed partial class TrainerCardViewModel : ObservableObject
 {
     private bool _artRequested;
+    private int _coverVersion;
 
     public TrainerCardViewModel(TrainerEntry entry)
     {
@@ -41,6 +42,12 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     private ImageSource? icon;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCover))]
+    private ImageSource? cover;
+
+    public bool HasCover => Cover is not null;
+
+    [ObservableProperty]
     private Brush artBackground;
 
     [ObservableProperty]
@@ -69,6 +76,7 @@ public sealed partial class TrainerCardViewModel : ObservableObject
         }
 
         _artRequested = true;
+        ReloadCover(art, dispatcher);
         CardArt? result = await art.GetIconAsync(Entry).ConfigureAwait(false);
         if (result is null)
         {
@@ -84,4 +92,17 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     }
 
     public void InvalidateArt() => _artRequested = false;
+
+    public async void ReloadCover(ArtService art, System.Windows.Threading.Dispatcher dispatcher)
+    {
+        int version = ++_coverVersion;
+        ImageSource? image = await art.GetCoverAsync(Entry).ConfigureAwait(false);
+        _ = dispatcher.BeginInvoke(() =>
+        {
+            if (version == _coverVersion)
+            {
+                Cover = image;
+            }
+        });
+    }
 }

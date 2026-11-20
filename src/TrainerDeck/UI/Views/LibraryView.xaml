@@ -49,13 +49,17 @@
             </Border>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="240" Tag="Type to search"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding CycleSortCommand}" ToolTip="Change sort order" Focusable="False">
+                <Button Style="{StaticResource AccentButton}" Margin="0,0,10,0" Command="{Binding OpenZipsCommand}" Focusable="False"
+                        ToolTip="{Binding PendingZipsLabel}" Visibility="{Binding HasPendingZips, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSort}" FontSize="15" Margin="0,0,8,0" />
-                        <TextBlock Text="{Binding SortLabel}" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource Glyph}" Text="&#xF012;" FontSize="15" Foreground="#06121A" />
+                        <TextBlock Text="{Binding PendingZipCount}" VerticalAlignment="Center" Margin="8,0,0,0" />
                     </StackPanel>
+                </Button>
+                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="210" Tag="Type to search"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding CycleSortCommand}" ToolTip="Change sort order (Ctrl+S)" Focusable="False">
+                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSort}" FontSize="16" />
                 </Button>
                 <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding RescanCommand}" ToolTip="Rescan (F5)" Focusable="False">
                     <TextBlock x:Name="RefreshGlyph" Text="{StaticResource GlyphRefresh}" FontSize="16"
@@ -83,6 +87,9 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
+                </Button>
+                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
+                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
                 </Button>
             </StackPanel>
         </Grid>

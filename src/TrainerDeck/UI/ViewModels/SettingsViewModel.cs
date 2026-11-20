@@ -1,0 +1,182 @@
+using System.Diagnostics;
+using System.IO;
+using TrainerDeck.Core.Diagnostics;
+using TrainerDeck.Core.Library;
+using TrainerDeck.Core.Settings;
+using TrainerDeck.Core.Text;
+
+namespace TrainerDeck.UI.ViewModels;
+
+public sealed class SettingsViewModel : RowListPageViewModel
+{
+    private static readonly string[] AfterLaunchOptions = ["Stay open", "Minimise", "Close Trainer Deck"];
+
+    private readonly AppServices _s;
+    private readonly EventHandler _onLibrary;
+
+    public SettingsViewModel(MainViewModel main) : base(main)
+    {
+        _s = main.Services;
+        Title = "Settings";
+        Subtitle = $"Trainer Deck {typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3)}"
+            + (_s.IsElevated ? "  ·  running as administrator" : "");
+        _onLibrary = (_, _) => main.Dispatcher.BeginInvoke(() =>
+        {
+            if (!_s.Library.IsScanning)
+            {
+                Rebuild();
+            }
+        });
+        _s.Library.Changed += _onLibrary;
+        Rebuild();
+    }
+
+    private AppSettings Current => _s.Settings.Current;
+
+    public override void OnClosed() => _s.Library.Changed -= _onLibrary;
+
+    public override void OnResumed() => Rebuild();
+
+    private void Rebuild()
+    {
+        var rows = new List<RowViewModel> { new HeaderRow("Library") };
+        bool usingDefault = Current.TrainerFolders.Count == 0;
+        foreach (string folder in _s.Library.Roots)
+        {
+            string f = folder;
+            bool isDefault = usingDefault || string.Equals(f, _s.Paths.DefaultTrainersDirectory, StringComparison.OrdinalIgnoreCase);
+            rows.Add(new ActionRow(f, Glyphs.Folder, () => OpenInExplorer(f), "Open",
+                isDefault ? "Trainer folder (next to Trainer Deck)" : "Trainer folder",
+                _s.Library.Roots.Count > 1 ? () => RemoveFolder(f) : null, "Remove"));
+        }
+
+        rows.Add(new ActionRow("Add a trainer folder…", Glyphs.Add, AddFolder, "Add", "Scanned together with the folders above, including subfolders"));
+        int zips = _s.Library.PendingZips.Count;
+        if (zips > 0)
+        {
+            rows.Add(new ActionRow("Extract zip files", Glyphs.Zip, Main.OpenZipImport, "Open", $"{Humanize.Plural(zips, "zip file")} waiting"));
+        }
+
+        int hidden = _s.Library.Entries.Count(e => e.Meta.Hidden);
+        rows.Add(new ActionRow("Hidden trainers", Glyphs.Hide, () => Main.Push(new HiddenTrainersViewModel(Main)), "Open",
+            hidden == 0 ? "None hidden" : $"{hidden} hidden"));
+        rows.Add(new ActionRow("Ignore patterns", Glyphs.Filter, () => Main.Push(new IgnorePatternsViewModel(Main)), "Edit",
+            Current.IgnorePatterns.Count == 0 ? "Skip files or folders by name, e.g. *Setup*.exe" : $"{Humanize.Plural(Current.IgnorePatterns.Count, "pattern")}"));
+        rows.Add(new ActionRow("Rescan now", Glyphs.Refresh, Rescan, "Rescan", $"{Humanize.Plural(_s.Library.Entries.Count, "trainer")} found"));
+
+        rows.Add(new HeaderRow("Launching"));
+        rows.Add(new ChoiceRow("After launching a trainer", AfterLaunchOptions, (int)Current.AfterLaunch,
+            i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)));
+        rows.Add(new ToggleRow("Run Trainer Deck as administrator", Current.RunAsAdministrator, v => _s.Settings.Update(s => s.RunAsAdministrator = v),
+            "Approve one prompt when Trainer Deck starts instead of one per trainer. Applies next time Trainer Deck starts."));
+
+        rows.Add(new HeaderRow("Display"));
+        rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),
+            "F11 switches at any time"));
+
+        rows.Add(new HeaderRow("Steam"));
+        bool hasSteam = _s.Steam.SteamPath is not null;
+        rows.Add(new ToggleRow("Use games installed with Steam", Current.UseLocalSteamData, v => SetSteam(s => s.UseLocalSteamData = v),
+            hasSteam ? "Card art and a Play button for installed games. Read from your Steam folder; nothing is downloaded." : "Steam isn't installed on this PC")
+        { IsEnabled = hasSteam });
+        rows.Add(new ToggleRow("Download art from Steam", Current.DownloadSteamArt, v => SetSteam(s => s.DownloadSteamArt = v),
+            "Looks up games you don't have installed on the Steam store and downloads their library art"));
+
+        rows.Add(new HeaderRow("Help"));
+        rows.Add(new ActionRow("Antivirus tips", Glyphs.Shield, Main.OpenAntivirusNotice, "Open", "Why trainers get flagged, and how to stop it"));
+        rows.Add(new ActionRow("Open data folder", Glyphs.Folder, () => OpenInExplorer(_s.Paths.DataDirectory), "Open",
+            _s.Paths.DataDirectory + (_s.Paths.IsPortable ? "" : " (the app folder isn't writable)")));
+
+        SetRows(rows);
+        HintsChanged();
+    }
+
+    private void AddFolder()
+    {
+        Main.PickFolder("Add a trainer folder", null, path =>
+        {
+            if (_s.Library.Roots.Any(r => string.Equals(r.TrimEnd('\\'), path.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)))
+            {
+                Main.ShowMessage("That folder is already in your library.");
+                return;
+            }
+
+            _s.Settings.Update(s =>
+            {
+                if (s.TrainerFolders.Count == 0)
+                {
+                    s.TrainerFolders.Add(_s.Paths.DefaultTrainersDirectory);
+                }
+
+                s.TrainerFolders.Add(path);
+            });
+            Main.ShowMessage($"Added {path}");
+            Rebuild();
+        });
+    }
+
+    private void RemoveFolder(string folder)
+    {
+        _s.Settings.Update(s =>
+        {
+            if (s.TrainerFolders.Count == 0)
+            {
+                s.TrainerFolders.AddRange(_s.Library.Roots);
+            }
+
+            s.TrainerFolders.RemoveAll(f => string.Equals(f, folder, StringComparison.OrdinalIgnoreCase));
+        });
+        Main.ShowMessage($"Removed {folder} (files were not touched)");
+        Rebuild();
+    }
+
+    private void Rescan()
+    {
+        _ = _s.Library.RescanAsync();
+        Main.ShowMessage("Rescanning…");
+    }
+
+    private void SetSteam(Action<AppSettings> change)
+    {
+        _s.Settings.Update(change);
+        _ = _s.Steam.RefreshAsync(force: true);
+    }
+
+    private void OpenInExplorer(string folder)
+    {
+        try
+        {
+            Directory.CreateDirectory(folder);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Open folder failed: {ex.Message}");
+            Main.ShowError("Couldn't open the folder.");
+        }
+    }
+}
+
+public sealed class HiddenTrainersViewModel : RowListPageViewModel
+{
+    public HiddenTrainersViewModel(MainViewModel main) : base(main)
+    {
+        Title = "Hidden trainers";
+        Rebuild();
+    }
+
+    private void Rebuild()
+    {
+        List<TrainerEntry> hidden = Main.Services.Library.Entries.Where(e => e.Meta.Hidden).OrderBy(e => e.SortKey).ToList();
+        Subtitle = hidden.Count == 0 ? "Nothing is hidden" : "Unhide a trainer to put it back in your library";
+        SetRows(hidden.Select(e => (RowViewModel)new ActionRow(e.DisplayName, Glyphs.View, () => Unhide(e), "Unhide", e.File.RelativePath)));
+        HintsChanged();
+    }
+
+    private void Unhide(TrainerEntry e)
+    {
+        Main.Services.Library.UpdateMetadata(e.Id, m => m.Hidden = false);
+        Main.ShowMessage($"{e.DisplayName} is back in your library");
+        Rebuild();
+    }
+}
