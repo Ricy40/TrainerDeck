@@ -1,6 +1,5 @@
 namespace TrainerDeck.Tests;
 
-/// <summary>Disposable temp directory for file-system tests.</summary>
 internal sealed class TempDir : IDisposable
 {
     public TempDir()
@@ -11,7 +10,6 @@ internal sealed class TempDir : IDisposable
 
     public string Path { get; }
 
-    /// <summary>Creates a file (and its folders) with <paramref name="bytes"/> bytes of content.</summary>
     public string File(string relative, int bytes = 16)
     {
         string full = System.IO.Path.Combine(Path, relative.Replace('/', System.IO.Path.DirectorySeparatorChar));

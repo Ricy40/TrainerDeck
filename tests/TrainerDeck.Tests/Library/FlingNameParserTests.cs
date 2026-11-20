@@ -4,7 +4,6 @@ namespace TrainerDeck.Tests.Library;
 
 public class FlingNameParserTests
 {
-    // Builds a platform-correct path from '/'-separated segments under a fake root.
     private static readonly string Root = Path.Combine(Path.GetTempPath(), "TD", "Trainers");
 
     private static string P(string relative) => Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar));
@@ -12,11 +11,11 @@ public class FlingNameParserTests
     private static ParsedTrainerName Parse(string relative) => FlingNameParser.Parse(P(relative), Root);
 
     [Theory]
-    // The canonical examples from the spec.
+
     [InlineData("Elden Ring v1.02-v1.16 Plus 35 Trainer.exe", "Elden Ring", "v1.02-v1.16", 35)]
     [InlineData("Hades II Early Access Plus 20 Trainer.exe", "Hades II", "Early Access", 20)]
     [InlineData("Cyberpunk 2077 v2.1+ Plus 30 Trainer.exe", "Cyberpunk 2077", "v2.1+", 30)]
-    // Common real-world variants.
+
     [InlineData("Monster Hunter Wilds Plus 50 Trainer.exe", "Monster Hunter Wilds", null, 50)]
     [InlineData("Baldur's Gate 3 v4.1.1.3624901+ Plus 37 Trainer.exe", "Baldur's Gate 3", "v4.1.1.3624901+", 37)]
     [InlineData("Resident Evil 4 (2023) v1.0-v20230407 Plus 25 Trainer.exe", "Resident Evil 4 (2023)", "v1.0-v20230407", 25)]
@@ -33,7 +32,7 @@ public class FlingNameParserTests
     [InlineData("Stellar Blade +40 Trainer.exe", "Stellar Blade", null, 40)]
     [InlineData("Vampire Survivors v1.0+ Plus 18 Trainer.exe", "Vampire Survivors", "v1.0+", 18)]
     [InlineData("Sid Meier's Civilization VII v1.0 Plus 15 Trainer.exe", "Sid Meier's Civilization VII", "v1.0", 15)]
-    // Ugly ones.
+
     [InlineData("ELDEN RING v1.02 Plus 35 Trainer (1).exe", "ELDEN RING", "v1.02", 35)]
     [InlineData("Elden Ring v1.02 Plus 35 Trainer - Copy (2).exe", "Elden Ring", "v1.02", 35)]
     [InlineData("Elden_Ring_v1.02-v1.16_Plus_35_Trainer.exe", "Elden Ring", "v1.02-v1.16", 35)]

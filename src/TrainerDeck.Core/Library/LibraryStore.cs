@@ -52,7 +52,7 @@ public sealed class LibraryStore
         return new LibraryStore(path, doc);
     }
 
-    public TrainerMetadata GetOrCreate(TrainerFile trainer, DateTime nowUtc)
+    public TrainerMetadata GetOrCreate(TrainerFile trainer, DateTime nowUtc, Func<string, bool>? isLive = null)
     {
         lock (_gate)
         {
@@ -63,7 +63,7 @@ public sealed class LibraryStore
                 return existing;
             }
 
-            var moved = _doc.Entries.FirstOrDefault(kv => kv.Value.RelativePath == rel);
+            var moved = _doc.Entries.FirstOrDefault(kv => kv.Value.RelativePath == rel && (isLive is null || !isLive(kv.Key)));
             if (moved.Value is not null)
             {
                 _doc.Entries.Remove(moved.Key);

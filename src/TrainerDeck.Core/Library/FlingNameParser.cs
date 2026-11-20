@@ -211,7 +211,7 @@ public static partial class FlingNameParser
         return sb.ToString();
     }
 
-    internal static string MakeSortKey(string name)
+    public static string MakeSortKey(string name)
     {
         string n = name.Trim();
         if (n.StartsWith("The ", StringComparison.OrdinalIgnoreCase) && n.Length > 4)
@@ -222,7 +222,7 @@ public static partial class FlingNameParser
         return n.ToUpperInvariant();
     }
 
-    internal static char MakeJumpLetter(string name)
+    public static char MakeJumpLetter(string name)
     {
         string key = MakeSortKey(name);
         foreach (char c in key)

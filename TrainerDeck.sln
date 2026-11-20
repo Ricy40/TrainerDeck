@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C1662310
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainerDeck.Tests", "tests\TrainerDeck.Tests\TrainerDeck.Tests.csproj", "{9F85E88F-6E9D-4498-8F3A-162314A360F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainerDeck", "src\TrainerDeck\TrainerDeck.csproj", "{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{9F85E88F-6E9D-4498-8F3A-162314A360F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F85E88F-6E9D-4498-8F3A-162314A360F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F85E88F-6E9D-4498-8F3A-162314A360F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CF69C3E3-AE5A-4A18-87A9-1B72B3D087A5} = {484D36F2-F4BD-4DD5-B23D-88B4CE981ADA}
 		{9F85E88F-6E9D-4498-8F3A-162314A360F5} = {C1662310-3A9F-4AB8-B440-A8FDB8B0F067}
+		{48471CC9-C6EF-4A5C-A1BF-33D1013DF65B} = {484D36F2-F4BD-4DD5-B23D-88B4CE981ADA}
 	EndGlobalSection
 EndGlobal
