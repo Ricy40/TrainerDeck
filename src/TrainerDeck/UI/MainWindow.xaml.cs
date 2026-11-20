@@ -26,6 +26,7 @@ public partial class MainWindow : Window
         DataContext = vm;
 
         vm.ToggleFullScreenRequested += (_, _) => ToggleFullScreen();
+        vm.AfterLaunchRequested += OnAfterLaunch;
         SourceInitialized += (_, _) => WindowInterop.ApplyDarkTitleBar(this, (Color)FindResource("BackgroundColor"));
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewTextInput += OnPreviewTextInput;
@@ -37,6 +38,33 @@ public partial class MainWindow : Window
     }
 
     private LibraryView? LibraryView => WindowInterop.FindDescendant<LibraryView>(this);
+
+    public void BringToFront()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = _mode.IsFullScreen ? WindowState.Maximized : WindowState.Normal;
+        }
+
+        Show();
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+    }
+
+    private void OnAfterLaunch(AfterLaunchBehavior behavior)
+    {
+        switch (behavior)
+        {
+            case AfterLaunchBehavior.Minimize:
+                WindowState = WindowState.Minimized;
+                break;
+            case AfterLaunchBehavior.Close:
+                Close();
+                break;
+        }
+    }
 
     private void ToggleFullScreen()
     {

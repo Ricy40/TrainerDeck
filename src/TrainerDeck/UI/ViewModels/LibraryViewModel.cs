@@ -7,7 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 using TrainerDeck.Art;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
+using TrainerDeck.Core.Launch;
 using TrainerDeck.Core.Library;
+using TrainerDeck.Launch;
 
 namespace TrainerDeck.UI.ViewModels;
 
@@ -15,17 +17,20 @@ public sealed partial class LibraryViewModel : PageViewModel
 {
     private readonly TrainerLibrary _library;
     private readonly ArtService _art;
+    private readonly LaunchService _launcher;
     private readonly Dispatcher _dispatcher;
-    private readonly Action<string> _showMessage;
+    private readonly MainViewModel _main;
     private readonly Dictionary<string, TrainerCardViewModel> _cards = new(StringComparer.Ordinal);
 
-    public LibraryViewModel(TrainerLibrary library, ArtService art, Dispatcher dispatcher, Action<string> showMessage)
+    public LibraryViewModel(TrainerLibrary library, ArtService art, LaunchService launcher, Dispatcher dispatcher, MainViewModel main)
     {
         _library = library;
         _art = art;
+        _launcher = launcher;
         _dispatcher = dispatcher;
-        _showMessage = showMessage;
+        _main = main;
         _library.Changed += (_, _) => _dispatcher.BeginInvoke(OnLibraryChanged);
+        _launcher.Running.Changed += (_, _) => _dispatcher.BeginInvoke(UpdateRunning);
     }
 
     [ObservableProperty]
@@ -75,7 +80,7 @@ public sealed partial class LibraryViewModel : PageViewModel
 
     public override IReadOnlyList<FooterHint> Hints =>
     [
-        new(InputAction.Activate, "Launch"),
+        new(InputAction.Activate, Selected?.IsRunning == true ? "Switch to" : "Launch"),
         new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"),
         new(InputAction.Details, "Details"),
         new(InputAction.NextTab, "Switch tab"),
@@ -104,7 +109,7 @@ public sealed partial class LibraryViewModel : PageViewModel
                 MoveSelection(action);
                 return true;
             case InputAction.Activate:
-                Activate(Selected);
+                _ = Activate(Selected);
                 return true;
             case InputAction.Favourite:
                 ToggleFavourite(Selected);
@@ -112,7 +117,7 @@ public sealed partial class LibraryViewModel : PageViewModel
             case InputAction.Details:
                 if (Selected is not null)
                 {
-                    _showMessage($"Details page arrives in milestone 5 ({Selected.Title}).");
+                    _main.ShowMessage($"Details page arrives in milestone 5 ({Selected.Title}).");
                 }
 
                 return true;
@@ -126,7 +131,7 @@ public sealed partial class LibraryViewModel : PageViewModel
                 CycleSort();
                 return true;
             case InputAction.Settings:
-                _showMessage("Settings arrive in milestone 5.");
+                _main.ShowMessage("Settings arrive in milestone 5.");
                 return true;
             case InputAction.Rescan:
                 RescanCommand.Execute(null);
@@ -197,20 +202,96 @@ public sealed partial class LibraryViewModel : PageViewModel
         catch (Exception ex)
         {
             Log.Warn($"Open folder failed: {ex.Message}");
-            _showMessage("Couldn't open the folder.");
+            _main.ShowError("Couldn't open the folder.");
         }
     }
 
     [RelayCommand]
-    public void Activate(TrainerCardViewModel? card)
+    public async Task Activate(TrainerCardViewModel? card)
+    {
+        if (card is null || _launcher.IsLaunching)
+        {
+            return;
+        }
+
+        Selected = card;
+        if (!card.IsRunning)
+        {
+            _main.ShowMessage($"Launching {card.Title}…");
+        }
+
+        LaunchResult result = await _launcher.LaunchAsync(card.Entry);
+        switch (result.Outcome)
+        {
+            case LaunchOutcome.AlreadyRunning:
+                _main.ShowMessage($"{card.Title} is already running");
+                break;
+            case LaunchOutcome.Cancelled:
+                _main.ClearMessage();
+                break;
+            case LaunchOutcome.Failed:
+                _main.ShowError(result.Message ?? $"Couldn't start {card.Title}.");
+                break;
+            case LaunchOutcome.Started:
+                _main.ShowMessage($"{card.Title} started");
+                await _launcher.FocusWhenReadyAsync(result.ProcessId);
+                _main.RequestAfterLaunch(_main.Settings.Current.AfterLaunch);
+                break;
+        }
+    }
+
+    [RelayCommand]
+    public async Task CloseTrainer(TrainerCardViewModel? card)
     {
         if (card is null)
         {
             return;
         }
 
-        Selected = card;
-        _showMessage($"Launching arrives in milestone 4 — selected {card.Title}.");
+        switch (await _launcher.CloseAsync(card.Id))
+        {
+            case CloseResult.Closed:
+                _main.ShowMessage($"Closed {card.Title}");
+                break;
+            case CloseResult.NotRunning:
+                _main.ShowMessage($"{card.Title} isn't running");
+                break;
+            case CloseResult.NeedsAdministrator:
+                _main.ShowError($"{card.Title} runs as administrator. Close it from its own window, or turn on “Run Trainer Deck as administrator”.");
+                break;
+            default:
+                _main.ShowError($"Couldn't close {card.Title}.");
+                break;
+        }
+    }
+
+    [RelayCommand]
+    public void ShowInFolder(TrainerCardViewModel? card)
+    {
+        if (card is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{card.Entry.File.FullPath}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Show in folder failed: {ex.Message}");
+            _main.ShowError("Couldn't open the folder.");
+        }
+    }
+
+    private void UpdateRunning()
+    {
+        foreach (TrainerCardViewModel card in _cards.Values)
+        {
+            card.IsRunning = _launcher.Running.IsRunning(card.Id);
+        }
+
+        HintsChanged();
     }
 
     [RelayCommand]
@@ -225,7 +306,7 @@ public sealed partial class LibraryViewModel : PageViewModel
         _library.Store.Update(card.Id, m => m.Favourite = fav);
         _library.SaveMetadata();
         card.Refresh(card.Entry);
-        _showMessage(fav ? $"Added {card.Title} to favourites" : $"Removed {card.Title} from favourites");
+        _main.ShowMessage(fav ? $"Added {card.Title} to favourites" : $"Removed {card.Title} from favourites");
         if (Tab == LibraryTab.Favourites)
         {
             Refresh();
@@ -240,6 +321,7 @@ public sealed partial class LibraryViewModel : PageViewModel
         if (!IsScanning)
         {
             Refresh();
+            _launcher.ScanRunningInBackground();
         }
     }
 
@@ -268,6 +350,7 @@ public sealed partial class LibraryViewModel : PageViewModel
                 card.Refresh(e);
             }
 
+            card.IsRunning = _launcher.Running.IsRunning(e.Id);
             card.EnsureArt(_art, _dispatcher);
             list.Add(card);
         }

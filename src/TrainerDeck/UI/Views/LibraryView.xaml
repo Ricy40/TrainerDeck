@@ -93,7 +93,8 @@
                  ItemContainerStyle="{StaticResource CardItemStyle}"
                  Background="Transparent" BorderThickness="0" FocusVisualStyle="{x:Null}"
                  KeyboardNavigation.DirectionalNavigation="None" KeyboardNavigation.TabNavigation="None"
-                 MouseDoubleClick="OnCardDoubleClick">
+                 MouseDoubleClick="OnCardDoubleClick"
+                 PreviewMouseRightButtonUp="OnCardRightClick">
             <ListBox.Template>
                 <ControlTemplate TargetType="ListBox">
                     <!-- Spacing lives inside the scrolled content so the scaled focus ring is never clipped. -->

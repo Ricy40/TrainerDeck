@@ -111,6 +111,20 @@ public sealed class TrainerLibrary : IDisposable
 
     public void SaveMetadata() => TrySave();
 
+    public void RecordLaunch(string id)
+    {
+        DateTime now = _utcNow();
+        if (Store.Update(id, m =>
+            {
+                m.LastLaunchedUtc = now;
+                m.LaunchCount++;
+            }))
+        {
+            TrySave();
+            RaiseChanged();
+        }
+    }
+
     private void TrySave()
     {
         try

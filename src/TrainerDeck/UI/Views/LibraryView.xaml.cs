@@ -108,12 +108,37 @@ public partial class LibraryView : UserControl
         _vm.PageRows = _panel.RowPitch > 0 ? Math.Max(1, (int)(viewport / _panel.RowPitch)) : 1;
     }
 
+    private void OnCardRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm is null
+            || ItemsControl.ContainerFromElement(CardList, e.OriginalSource as DependencyObject) is not ListBoxItem { DataContext: TrainerCardViewModel card } item)
+        {
+            return;
+        }
+
+        _vm.Selected = card;
+        var menu = new ContextMenu { PlacementTarget = item, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+        menu.Items.Add(MenuItem(card.IsRunning ? "Switch to" : "Launch", "", _vm.ActivateCommand, card));
+        if (card.IsRunning)
+        {
+            menu.Items.Add(MenuItem("Close trainer", "", _vm.CloseTrainerCommand, card));
+        }
+
+        menu.Items.Add(MenuItem(card.IsFavourite ? "Remove from favourites" : "Add to favourites", card.IsFavourite ? "" : "", _vm.ToggleFavouriteCommand, card));
+        menu.Items.Add(MenuItem("Show in folder", "", _vm.ShowInFolderCommand, card));
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    private static MenuItem MenuItem(string header, string glyph, ICommand command, object parameter) =>
+        new() { Header = header, Tag = glyph, Command = command, CommandParameter = parameter };
+
     private void OnCardDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton == MouseButton.Left
             && ItemsControl.ContainerFromElement(CardList, e.OriginalSource as DependencyObject) is ListBoxItem { DataContext: TrainerCardViewModel card })
         {
-            _vm?.Activate(card);
+            _ = _vm?.Activate(card);
         }
     }
 }

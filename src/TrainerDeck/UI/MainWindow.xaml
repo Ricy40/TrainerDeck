@@ -27,10 +27,28 @@
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
                 Height="56" Padding="40,0">
             <Grid>
-                <TextBlock Text="{Binding Message}" Style="{StaticResource TextBase}" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" Margin="0,0,24,0"
-                           Visibility="{Binding Message, Converter={StaticResource NullToVisibility}}" />
-                <ItemsControl ItemsSource="{Binding Hints}" HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <DockPanel VerticalAlignment="Center" Margin="0,0,24,0"
+                           Visibility="{Binding Message, Converter={StaticResource NullToVisibility}}">
+                    <TextBlock DockPanel.Dock="Left" Text="&#xE783;" Style="{StaticResource Glyph}" FontSize="16" Foreground="{StaticResource DangerBrush}"
+                               VerticalAlignment="Center" Margin="0,0,10,0"
+                               Visibility="{Binding MessageIsError, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Message}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding MessageIsError}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </DockPanel>
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Hints}" HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" />

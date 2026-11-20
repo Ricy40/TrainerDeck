@@ -6,6 +6,7 @@ using TrainerDeck.Art;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
+using TrainerDeck.Launch;
 using TrainerDeck.UI.Input;
 
 namespace TrainerDeck.UI.ViewModels;
@@ -15,14 +16,15 @@ public sealed record HintViewModel(string Key, string Label, bool Round, System.
 public sealed partial class MainViewModel : ObservableObject
 {
     private static readonly TimeSpan MessageDuration = TimeSpan.FromSeconds(4);
+    private static readonly TimeSpan ErrorDuration = TimeSpan.FromSeconds(7);
 
     private readonly Stack<PageViewModel> _pages = new();
     private readonly DispatcherTimer _messageTimer;
 
-    public MainViewModel(TrainerLibrary library, ArtService art, SettingsStore settings, Dispatcher dispatcher)
+    public MainViewModel(TrainerLibrary library, ArtService art, SettingsStore settings, LaunchService launcher, Dispatcher dispatcher)
     {
         Settings = settings;
-        Library = new LibraryViewModel(library, art, dispatcher, ShowMessage);
+        Library = new LibraryViewModel(library, art, launcher, dispatcher, this);
         _messageTimer = new DispatcherTimer(MessageDuration, DispatcherPriority.Normal, (_, _) => ClearMessage(), dispatcher) { IsEnabled = false };
         Push(Library);
     }
@@ -40,9 +42,16 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? message;
 
+    [ObservableProperty]
+    private bool messageIsError;
+
     public ObservableCollection<HintViewModel> Hints { get; } = new();
 
     public event EventHandler? ToggleFullScreenRequested;
+
+    public event Action<AfterLaunchBehavior>? AfterLaunchRequested;
+
+    public void RequestAfterLaunch(AfterLaunchBehavior behavior) => AfterLaunchRequested?.Invoke(behavior);
 
     [ObservableProperty]
     private ControllerKind lastControllerKind = ControllerKind.Xbox;
@@ -150,14 +159,20 @@ public sealed partial class MainViewModel : ObservableObject
     public void OnControllerConnectionChanged(string name, bool connected) =>
         ShowMessage(connected ? $"{name} connected" : $"{name} disconnected");
 
-    public void ShowMessage(string text)
+    public void ShowMessage(string text) => ShowMessage(text, false);
+
+    public void ShowError(string text) => ShowMessage(text, true);
+
+    private void ShowMessage(string text, bool error)
     {
         Message = text;
+        MessageIsError = error;
         _messageTimer.Stop();
+        _messageTimer.Interval = error ? ErrorDuration : MessageDuration;
         _messageTimer.Start();
     }
 
-    private void ClearMessage()
+    public void ClearMessage()
     {
         _messageTimer.Stop();
         Message = null;
