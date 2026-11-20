@@ -50,6 +50,7 @@ public static class KeyboardMap
         InputAction.Settings => "Ctrl+,",
         InputAction.Rescan => "F5",
         InputAction.ToggleFullScreen => "F11",
+        InputAction.LetterRail => "Release",
         InputAction.PageUp => "PgUp",
         InputAction.PageDown => "PgDn",
         InputAction.Up or InputAction.Down or InputAction.Left or InputAction.Right => "Arrows",

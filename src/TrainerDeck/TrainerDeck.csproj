@@ -6,6 +6,7 @@
     <RootNamespace>TrainerDeck</RootNamespace>
     <AssemblyName>TrainerDeck</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/TrainerDeck.ico</ApplicationIcon>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <Product>Trainer Deck</Product>
     <!-- Used when publishing single-file (see README). WPF needs its native libraries bundled. -->

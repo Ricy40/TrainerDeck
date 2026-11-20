@@ -3,7 +3,7 @@ using TrainerDeck.Core.Input;
 
 namespace TrainerDeck.UI.ViewModels;
 
-public sealed record FooterHint(InputAction Action, string Label);
+public sealed record FooterHint(InputAction Action, string Label, string? ControllerLabel = null);
 
 public abstract class PageViewModel : ObservableObject
 {

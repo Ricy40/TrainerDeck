@@ -7,6 +7,7 @@
              xmlns:lib="clr-namespace:TrainerDeck.Core.Library;assembly=TrainerDeck.Core">
     <UserControl.Resources>
         <ui:EnumEqualsConverter x:Key="EnumEquals" />
+        <ui:RailItemHeightConverter x:Key="RailItemHeight" />
     </UserControl.Resources>
 
     <Grid>
@@ -132,5 +133,62 @@
                 </StackPanel>
             </Button>
         </StackPanel>
+
+        <!-- A–Z rail: shown while a shoulder button is held -->
+        <Grid Grid.Row="1" x:Name="Rail" Opacity="0" IsHitTestVisible="False">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsRailOpen}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.12" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Rectangle Fill="#990D0F13" />
+            <Border Width="168" Height="168" CornerRadius="32" Background="{StaticResource SurfaceHighBrush}"
+                    BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding RailLetter}" Style="{StaticResource TextTitle}" FontSize="96"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-8,0,0" />
+            </Border>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,24,0" Padding="6,10"
+                    Background="{StaticResource SurfaceBrush}" CornerRadius="22">
+                <ItemsControl ItemsSource="{Binding RailLetters}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:RailLetterViewModel}">
+                            <Grid Width="32" Height="{Binding ActualHeight, ElementName=Rail, Converter={StaticResource RailItemHeight}}">
+                                <Ellipse x:Name="Dot" Width="28" Height="28" Fill="{StaticResource AccentBrush}" Visibility="Collapsed" />
+                                <TextBlock x:Name="Letter" Text="{Binding Text}" Style="{StaticResource TextBase}" FontSize="14" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextTertiaryBrush}" Opacity="0.5" />
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsAvailable}" Value="True">
+                                    <Setter TargetName="Letter" Property="Opacity" Value="1" />
+                                    <Setter TargetName="Letter" Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                    <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="Letter" Property="Foreground" Value="#06121A" />
+                                    <Setter TargetName="Letter" Property="Opacity" Value="1" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

@@ -22,6 +22,7 @@ public enum InputAction
     Rescan,
     ToggleFullScreen,
     LetterRail,
+    LetterRailEnd,
 }
 
 public enum InputSource

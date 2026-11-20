@@ -7,6 +7,7 @@ public sealed class InputRouter
     private GamepadButtons _previous;
     private InputAction? _repeating;
     private TimeSpan _nextRepeat;
+    private readonly Dictionary<GamepadButtons, (TimeSpan PressedAt, bool Fired)> _holds = new();
 
     public InputRouter(ControllerMapping mapping) => _mapping = mapping;
 
@@ -16,12 +17,15 @@ public sealed class InputRouter
 
     public TimeSpan PageRepeatInterval { get; init; } = TimeSpan.FromMilliseconds(220);
 
+    public TimeSpan HoldThreshold { get; init; } = TimeSpan.FromMilliseconds(300);
+
     public GamepadButtons Held => _previous;
 
     public void Reset()
     {
         _previous = GamepadButtons.None;
         _repeating = null;
+        _holds.Clear();
     }
 
     public bool IsHeld(InputAction action) => (_previous & _mapping.ButtonsFor(action)) != 0;
@@ -62,8 +66,37 @@ public sealed class InputRouter
             }
         }
 
+        UpdateHolds(buttons, pressed, now, actions);
         _previous = buttons;
         return actions;
+    }
+
+    private void UpdateHolds(GamepadButtons buttons, GamepadButtons pressed, TimeSpan now, List<InputAction> actions)
+    {
+        foreach (HoldBinding h in _mapping.Holds)
+        {
+            if ((pressed & h.Button) != 0)
+            {
+                _holds[h.Button] = (now, false);
+                continue;
+            }
+
+            if (!_holds.TryGetValue(h.Button, out var state))
+            {
+                continue;
+            }
+
+            if ((buttons & h.Button) == 0)
+            {
+                _holds.Remove(h.Button);
+                actions.Add(state.Fired ? h.EndAction : h.TapAction);
+            }
+            else if (!state.Fired && now - state.PressedAt >= HoldThreshold)
+            {
+                _holds[h.Button] = (state.PressedAt, true);
+                actions.Add(h.HoldAction);
+            }
+        }
     }
 
     private static bool IsRepeatable(InputAction action) => action is InputAction.Up or InputAction.Down

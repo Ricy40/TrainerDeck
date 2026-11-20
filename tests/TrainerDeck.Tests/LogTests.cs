@@ -2,7 +2,12 @@ using TrainerDeck.Core.Diagnostics;
 
 namespace TrainerDeck.Tests;
 
-[Collection("Log")] // Log is static
+[CollectionDefinition("Log", DisableParallelization = true)]
+public class LogCollection
+{
+}
+
+[Collection("Log")]
 public class LogTests
 {
     [Fact]

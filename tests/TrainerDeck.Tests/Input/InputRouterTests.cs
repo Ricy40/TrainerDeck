@@ -28,8 +28,6 @@ public class InputRouterTests
     [InlineData(GamepadButtons.B, InputAction.Back)]
     [InlineData(GamepadButtons.X, InputAction.Favourite)]
     [InlineData(GamepadButtons.Y, InputAction.Details)]
-    [InlineData(GamepadButtons.LeftShoulder, InputAction.PrevTab)]
-    [InlineData(GamepadButtons.RightShoulder, InputAction.NextTab)]
     [InlineData(GamepadButtons.LeftTrigger, InputAction.PageUp)]
     [InlineData(GamepadButtons.RightTrigger, InputAction.PageDown)]
     [InlineData(GamepadButtons.Back, InputAction.Sort)]
@@ -38,6 +36,45 @@ public class InputRouterTests
     [InlineData(GamepadButtons.DPadDown, InputAction.Down)]
     public void Default_mapping(GamepadButtons button, InputAction expected) =>
         Assert.Equal([expected], Router().Update(button, Ms(0)));
+
+    [Theory]
+    [InlineData(GamepadButtons.LeftShoulder, InputAction.PrevTab)]
+    [InlineData(GamepadButtons.RightShoulder, InputAction.NextTab)]
+    public void Shoulder_tap_switches_tab_on_release(GamepadButtons button, InputAction expected)
+    {
+        var r = Router();
+        Assert.Empty(r.Update(button, Ms(0)));
+        Assert.Empty(r.Update(button, Ms(120)));
+        Assert.Equal([expected], r.Update(GamepadButtons.None, Ms(150)));
+    }
+
+    [Fact]
+    public void Shoulder_hold_opens_letter_rail_and_release_closes_it()
+    {
+        var r = Router();
+        Assert.Empty(r.Update(GamepadButtons.RightShoulder, Ms(0)));
+        Assert.Equal([InputAction.LetterRail], r.Update(GamepadButtons.RightShoulder, Ms(320)));
+        Assert.Empty(r.Update(GamepadButtons.RightShoulder, Ms(600)));
+        Assert.Equal([InputAction.Down], r.Update(GamepadButtons.RightShoulder | GamepadButtons.DPadDown, Ms(650)));
+        Assert.Empty(r.Update(GamepadButtons.RightShoulder, Ms(700)));
+        Assert.Equal([InputAction.LetterRailEnd], r.Update(GamepadButtons.None, Ms(800)));
+    }
+
+    [Fact]
+    public void Reset_forgets_a_pending_hold()
+    {
+        var r = Router();
+        r.Update(GamepadButtons.LeftShoulder, Ms(0));
+        r.Reset();
+        Assert.Empty(r.Update(GamepadButtons.None, Ms(100)));
+    }
+
+    [Fact]
+    public void Mapping_reports_shoulders_for_tab_and_rail_actions()
+    {
+        Assert.Equal(GamepadButtons.LeftShoulder, ControllerMapping.Default.ButtonsFor(InputAction.PrevTab));
+        Assert.Equal(GamepadButtons.LeftShoulder | GamepadButtons.RightShoulder, ControllerMapping.Default.ButtonsFor(InputAction.LetterRail));
+    }
 
     [Fact]
     public void Held_direction_repeats_after_delay_then_at_rate()

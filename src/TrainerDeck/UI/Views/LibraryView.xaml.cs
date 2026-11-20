@@ -13,6 +13,7 @@ public partial class LibraryView : UserControl, IPageView
 {
     private CardGridPanel? _panel;
     private ScrollViewer? _scroller;
+    private SmoothScroller? _smooth;
     private LibraryViewModel? _vm;
 
     public LibraryView()
@@ -49,6 +50,11 @@ public partial class LibraryView : UserControl, IPageView
     {
         CardList.ApplyTemplate();
         _scroller = CardList.Template.FindName("Scroller", CardList) as ScrollViewer;
+        if (_scroller is not null && _smooth is null)
+        {
+            _smooth = new SmoothScroller(_scroller);
+            _scroller.PreviewMouseWheel += OnMouseWheel;
+        }
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {
             _panel = WindowInterop.FindDescendant<CardGridPanel>(CardList);
@@ -91,11 +97,40 @@ public partial class LibraryView : UserControl, IPageView
             return;
         }
 
-        item.BringIntoView(new Rect(-24, -28, item.ActualWidth + 48, item.ActualHeight + 56));
+        if (_scroller is not null && _smooth is not null)
+        {
+            const double margin = 30;
+            Rect r = item.TransformToAncestor(_scroller).TransformBounds(new Rect(0, 0, item.ActualWidth, item.ActualHeight));
+            double offset = _scroller.VerticalOffset;
+            if (r.Top - margin < 0)
+            {
+                _smooth.ScrollTo(offset + r.Top - margin);
+            }
+            else if (r.Bottom + margin > _scroller.ViewportHeight)
+            {
+                _smooth.ScrollTo(offset + r.Bottom + margin - _scroller.ViewportHeight);
+            }
+        }
+        else
+        {
+            item.BringIntoView(new Rect(-24, -28, item.ActualWidth + 48, item.ActualHeight + 56));
+        }
+
         if (!IsSearchFocused && IsKeyboardFocusWithin)
         {
             item.Focus();
         }
+    }
+
+    private void OnMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_smooth is null)
+        {
+            return;
+        }
+
+        _smooth.ScrollTo(_smooth.Target - (e.Delta * 1.4));
+        e.Handled = true;
     }
 
     private void UpdateMetrics()

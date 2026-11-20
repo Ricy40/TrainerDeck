@@ -22,7 +22,7 @@ public static class ControllerGlyphs
 
     public static ButtonGlyph For(InputAction action, ControllerKind kind, ControllerMapping mapping)
     {
-        if (action is InputAction.NextTab or InputAction.PrevTab)
+        if (action is InputAction.NextTab or InputAction.PrevTab or InputAction.LetterRail)
         {
             ButtonGlyph l = For(GamepadButtons.LeftShoulder, kind), r = For(GamepadButtons.RightShoulder, kind);
             return new ButtonGlyph($"{l.Text} {r.Text}", false, Neutral);

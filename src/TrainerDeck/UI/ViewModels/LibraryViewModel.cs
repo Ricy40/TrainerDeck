@@ -111,12 +111,28 @@ public sealed partial class LibraryViewModel : PageViewModel
 
     public string PrimaryFolder => _library.Roots.FirstOrDefault() ?? "";
 
-    public override IReadOnlyList<FooterHint> Hints =>
-    [
+    public ObservableCollection<RailLetterViewModel> RailLetters { get; } =
+        new(LetterIndex.Letters.Select(c => new RailLetterViewModel(c)));
+
+    [ObservableProperty]
+    private bool isRailOpen;
+
+    [ObservableProperty]
+    private string railLetter = "";
+
+    private char _railLetter;
+
+    public override IReadOnlyList<FooterHint> Hints => IsRailOpen
+    ? [
+        new(InputAction.Down, "Pick a letter"),
+        new(InputAction.LetterRail, "Release to jump"),
+        new(InputAction.Back, "Cancel"),
+    ]
+    : [
         new(InputAction.Activate, Selected?.IsRunning == true ? "Switch to" : "Launch"),
         new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"),
         new(InputAction.Details, "Details"),
-        new(InputAction.NextTab, "Switch tab"),
+        new(InputAction.NextTab, "Switch tab", "Tab · hold for A–Z"),
         new(InputAction.Sort, "Sort"),
         HasSearch ? new(InputAction.Back, "Clear search") : new(InputAction.Settings, "Settings"),
     ];
@@ -135,6 +151,11 @@ public sealed partial class LibraryViewModel : PageViewModel
 
     public override bool Handle(InputAction action)
     {
+        if (IsRailOpen || action == InputAction.LetterRail)
+        {
+            return HandleRail(action);
+        }
+
         switch (action)
         {
             case InputAction.Up or InputAction.Down or InputAction.Left or InputAction.Right
@@ -171,6 +192,90 @@ public sealed partial class LibraryViewModel : PageViewModel
                 return true;
             default:
                 return false;
+        }
+    }
+
+    private bool HandleRail(InputAction action)
+    {
+        switch (action)
+        {
+            case InputAction.LetterRail:
+                OpenRail();
+                break;
+            case InputAction.Up or InputAction.Left:
+                MoveRail(-1);
+                break;
+            case InputAction.Down or InputAction.Right:
+                MoveRail(1);
+                break;
+            case InputAction.PageUp:
+                MoveRail(-5);
+                break;
+            case InputAction.PageDown:
+                MoveRail(5);
+                break;
+            case InputAction.LetterRailEnd or InputAction.Activate:
+                JumpToLetter(_railLetter);
+                CloseRail();
+                break;
+            case InputAction.Back:
+                CloseRail();
+                break;
+        }
+
+        return true;
+    }
+
+    private void OpenRail()
+    {
+        if (IsRailOpen || Items.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<char> available = LetterIndex.Available(Items.Select(c => c.Entry.JumpLetter));
+        foreach (RailLetterViewModel l in RailLetters)
+        {
+            l.IsAvailable = available.Contains(l.Letter);
+        }
+
+        char start = Selected?.Entry.JumpLetter ?? Items[0].Entry.JumpLetter;
+        SetRailLetter(start);
+        IsRailOpen = true;
+        HintsChanged();
+    }
+
+    private void MoveRail(int delta)
+    {
+        var available = new HashSet<char>(RailLetters.Where(l => l.IsAvailable).Select(l => l.Letter));
+        SetRailLetter(LetterIndex.Step(_railLetter, delta, available));
+    }
+
+    private void SetRailLetter(char letter)
+    {
+        _railLetter = letter;
+        RailLetter = letter.ToString();
+        foreach (RailLetterViewModel l in RailLetters)
+        {
+            l.IsCurrent = l.Letter == letter;
+        }
+    }
+
+    public void JumpToLetter(char letter)
+    {
+        int index = LetterIndex.FirstIndex(Items.Select(c => c.Entry.JumpLetter).ToList(), letter);
+        if (index >= 0)
+        {
+            Selected = Items[index];
+        }
+    }
+
+    public void CloseRail()
+    {
+        if (IsRailOpen)
+        {
+            IsRailOpen = false;
+            HintsChanged();
         }
     }
 

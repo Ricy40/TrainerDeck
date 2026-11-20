@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
@@ -27,6 +28,14 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (e.Args.Length >= 1 && e.Args[0].Equals("--export-art", StringComparison.OrdinalIgnoreCase))
+        {
+            string folder = e.Args.Length >= 2 ? e.Args[1] : Path.Combine(AppContext.BaseDirectory, "art");
+            BrandArt.Export(folder);
+            Shutdown();
+            return;
+        }
 
         PortablePaths paths = PortablePaths.Resolve(AppContext.BaseDirectory);
         Log.Initialize(paths.LogFile);

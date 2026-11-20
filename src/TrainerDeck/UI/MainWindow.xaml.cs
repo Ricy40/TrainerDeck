@@ -31,11 +31,13 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName == nameof(MainViewModel.CurrentPage))
             {
+                AnimatePageIn();
                 Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, FocusPage);
             }
         };
         SourceInitialized += (_, _) => WindowInterop.ApplyDarkTitleBar(this, (Color)FindResource("BackgroundColor"));
         PreviewKeyDown += OnPreviewKeyDown;
+        Deactivated += (_, _) => _vm.Library.CloseRail();
         PreviewTextInput += OnPreviewTextInput;
 
         if (settings.Current.StartFullScreen)
@@ -58,6 +60,17 @@ public partial class MainWindow : Window
         Topmost = true;
         Topmost = false;
         Focus();
+    }
+
+    private void AnimatePageIn()
+    {
+        var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(200);
+        PageHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, duration));
+        if (PageHost.RenderTransform is TranslateTransform t)
+        {
+            t.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(14, 0, duration) { EasingFunction = ease });
+        }
     }
 
     private void FocusPage()

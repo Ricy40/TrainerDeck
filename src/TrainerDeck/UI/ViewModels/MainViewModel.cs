@@ -50,6 +50,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool messageIsError;
 
+    [ObservableProperty]
+    private bool isMessageVisible;
+
     public ObservableCollection<HintViewModel> Hints { get; } = new();
 
     public event EventHandler? ToggleFullScreenRequested;
@@ -191,7 +194,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (LastDevice == InputSource.Controller)
             {
                 ButtonGlyph g = ControllerGlyphs.For(hint.Action, LastControllerKind, ControllerMapping.Default);
-                Hints.Add(new HintViewModel(g.Text, hint.Label, g.Round, Frozen(g.Color)));
+                Hints.Add(new HintViewModel(g.Text, hint.ControllerLabel ?? hint.Label, g.Round, Frozen(g.Color)));
             }
             else
             {
@@ -219,6 +222,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void ShowMessage(string text, bool error)
     {
         Message = text;
+        IsMessageVisible = true;
         MessageIsError = error;
         _messageTimer.Stop();
         _messageTimer.Interval = error ? ErrorDuration : MessageDuration;
@@ -228,6 +232,6 @@ public sealed partial class MainViewModel : ObservableObject
     public void ClearMessage()
     {
         _messageTimer.Stop();
-        Message = null;
+        IsMessageVisible = false;
     }
 }
