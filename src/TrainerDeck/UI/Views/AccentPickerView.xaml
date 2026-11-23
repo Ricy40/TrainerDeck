@@ -3,13 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Focusable="True" FocusVisualStyle="{x:Null}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-        <StackPanel Margin="60,60,60,24" HorizontalAlignment="Left">
-            <TextBlock Text="{Binding Title}" Style="{StaticResource TextTitle}" FontSize="32" />
-            <TextBlock Style="{StaticResource TextSecondary}" FontSize="16" Margin="0,12,0,28">
+        <StackPanel MaxWidth="1000" Margin="44,34,40,24">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource TextTitle}" FontSize="28" />
+            <TextBlock Style="{StaticResource TextSecondary}" FontSize="14" Margin="0,4,0,24">
                 <Run Text="Windows colours. Current:" /> <Run Text="{Binding CurrentHex, Mode=OneWay}" FontWeight="SemiBold" />
             </TextBlock>
 
-            <ItemsControl ItemsSource="{Binding Swatches}" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Swatches}" Focusable="False" HorizontalAlignment="Left" Margin="-4,0,0,0">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="8" />
@@ -22,9 +22,9 @@
                                 CommandParameter="{Binding}">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="Ring" Width="64" Height="64" CornerRadius="8" BorderThickness="3"
+                                    <Border x:Name="Ring" Width="64" Height="64" CornerRadius="7" BorderThickness="2"
                                             BorderBrush="Transparent" Padding="3">
-                                        <Border CornerRadius="5" Background="{Binding Brush}">
+                                        <Border CornerRadius="4" Background="{Binding Brush}" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
                                             <TextBlock x:Name="Check" Text="&#xE73E;" FontFamily="{StaticResource IconFont}" FontSize="20"
                                                        Foreground="{Binding CheckBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                        Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVisibility}}" />
@@ -32,10 +32,10 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource TextTertiaryBrush}" />
+                                            <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
                                         </Trigger>
                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                            <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}" />
+                                            <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
                                         </DataTrigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -45,7 +45,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <Button Style="{StaticResource FlatButton}" Focusable="False" HorizontalAlignment="Left" Margin="4,24,0,0"
+            <Button Style="{StaticResource FlatButton}" Focusable="False" HorizontalAlignment="Left" Margin="0,20,0,0"
                     Command="{Binding EnterCustomCommand}" Content="Custom colour…" />
         </StackPanel>
     </ScrollViewer>

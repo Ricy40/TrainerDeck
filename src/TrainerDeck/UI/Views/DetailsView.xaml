@@ -27,7 +27,7 @@
 
             <!-- Cover -->
             <Grid Width="280" Height="392" VerticalAlignment="Top" Margin="0,0,48,0" DataContext="{Binding Card}">
-                <Border x:Name="CoverMask" CornerRadius="16" Background="White" />
+                <Border x:Name="CoverMask" CornerRadius="8" Background="White" />
                 <Grid>
                     <Grid.OpacityMask>
                         <VisualBrush Visual="{Binding ElementName=CoverMask}" />
@@ -43,13 +43,14 @@
                     </Image>
                     <Image Source="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                 </Grid>
-                <Border Background="{DynamicResource RunningBrush}" CornerRadius="8" Padding="10,4" Margin="12"
+                <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Border Background="{DynamicResource RunningBrush}" CornerRadius="4" Padding="8,3" Margin="10"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="13" FontWeight="Bold" Foreground="#05210F" />
                 </Border>
                 <Grid.Effect>
-                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.5" />
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="10" Direction="270" Opacity="{DynamicResource ShadowOpacityHigh}" />
                 </Grid.Effect>
             </Grid>
 
@@ -58,16 +59,13 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <StackPanel Margin="20,0,20,8">
+                <StackPanel Margin="4,0,20,8">
                     <Grid>
-                        <TextBlock Text="{Binding Title}" Style="{StaticResource TextTitle}" FontSize="38" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource TextTitle}" FontSize="36" TextWrapping="Wrap"
                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVisibility}}"
                                    x:Name="TitleText" />
                         <TextBox x:Name="RenameBox" Text="{Binding RenameText, UpdateSourceTrigger=PropertyChanged}"
-                                 FontSize="32" FontFamily="{StaticResource DisplayFont}" FontWeight="SemiBold" Padding="12,6"
-                                 Background="{DynamicResource SurfaceHighBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                                 CaretBrush="{DynamicResource AccentBrush}" SelectionBrush="{DynamicResource AccentBrush}"
-                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+                                 Style="{StaticResource FluentTextBox}" FontSize="30" FontFamily="{StaticResource DisplayFont}" FontWeight="SemiBold" Padding="12,6"
                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                     <TextBlock Text="{Binding Subtitle}" Style="{StaticResource TextSecondary}" FontSize="17" Margin="0,8,0,0"
@@ -81,14 +79,14 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:InfoLine}">
                                 <StackPanel Margin="0,0,36,12" MaxWidth="420">
-                                    <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" FontSize="12" Typography.Capitals="AllSmallCaps" />
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" FontSize="12" />
                                     <TextBlock Text="{Binding Value}" Style="{StaticResource TextBase}" FontSize="15" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-                <controls:RowListBox Grid.Row="1" Style="{StaticResource RowListBox}" MaxWidth="760" HorizontalAlignment="Left"
+                <controls:RowListBox Grid.Row="1" Style="{StaticResource RowListBox}" MaxWidth="780" HorizontalAlignment="Left"
                                      ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow, Mode=OneWay}" />
             </Grid>
         </Grid>

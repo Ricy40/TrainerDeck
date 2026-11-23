@@ -21,6 +21,8 @@ public abstract partial class RowViewModel : ObservableObject
 
     public virtual bool IsSelectable => IsEnabled;
 
+    public virtual bool IsCard => true;
+
     public virtual string ActivateLabel => "Select";
 
     public virtual string? SecondaryLabel => null;
@@ -45,6 +47,8 @@ public sealed class HeaderRow : RowViewModel
     public HeaderRow(string label) => Label = label;
 
     public override bool IsSelectable => false;
+
+    public override bool IsCard => false;
 }
 
 public sealed class ActionRow : RowViewModel

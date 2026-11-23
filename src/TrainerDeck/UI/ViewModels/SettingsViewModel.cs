@@ -61,7 +61,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
             rows.Add(new ToggleRow("Always run as administrator", Current.RunAsAdministrator, SetRunAsAdministrator,
                 (_s.IsElevated ? "Running as administrator now. " : "Not running as administrator right now. ")
                 + "Needed for the Cheats panel. Windows asks once each time Trainer Deck starts; trainers then launch without their own prompts. "
-                + "Install Trainer Deck to skip that prompt."));
+                + "Install Trainer Deck to skip that prompt.") { Glyph = Glyphs.Shield });
         }
         if (!_s.IsElevated)
         {
@@ -97,20 +97,20 @@ public sealed class SettingsViewModel : RowListPageViewModel
 
         rows.Add(new HeaderRow("Launching"));
         rows.Add(new ChoiceRow("After launching a trainer", AfterLaunchOptions, (int)Current.AfterLaunch,
-            i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)));
+            i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)) { Glyph = Glyphs.Rocket });
 
         rows.Add(new HeaderRow("Cheats"));
         rows.Add(new ToggleRow("In-game controller shortcuts", Current.CheatShortcutsEnabled, v => _s.Settings.Update(s => s.CheatShortcutsEnabled = v),
             "Trigger cheats while you play: hold the button below and press the one assigned in a trainer's Cheats panel. "
-            + "Only active while a trainer with shortcuts is running."));
+            + "Only active while a trainer with shortcuts is running.") { Glyph = Glyphs.Game });
         int modifierIndex = Array.FindIndex(ShortcutModifiers, m => string.Equals(m.Value, Current.CheatShortcutModifier, StringComparison.OrdinalIgnoreCase));
         rows.Add(new ChoiceRow("Shortcut button to hold", ShortcutModifiers.Select(m => m.Label).ToArray(), Math.Max(0, modifierIndex),
             i => _s.Settings.Update(s => s.CheatShortcutModifier = ShortcutModifiers[i].Value),
-            "Hold this, then press the button assigned to a cheat"));
+            "Hold this, then press the button assigned to a cheat") { Glyph = Glyphs.Game });
 
         rows.Add(new HeaderRow("Overlay"));
         rows.Add(new ToggleRow("In-game overlay", Current.OverlayEnabled, v => Change(s => s.OverlayEnabled = v),
-            "A panel over your game with the running trainer's cheats, controlled with the pad"));
+            "A panel over your game with the running trainer's cheats, controlled with the pad") { Glyph = Glyphs.Layers });
         if (Current.OverlayEnabled)
         {
             bool hasHotkey = !string.IsNullOrWhiteSpace(Current.OverlayHotkey);
@@ -120,7 +120,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
             int comboIndex = Array.FindIndex(OverlayCombos, c => string.Equals(c.Value, Current.OverlayControllerCombo, StringComparison.OrdinalIgnoreCase));
             rows.Add(new ChoiceRow("Controller combo", OverlayCombos.Select(c => c.Label).ToArray(), Math.Max(0, comboIndex),
                 i => Change(s => s.OverlayControllerCombo = OverlayCombos[i].Value),
-                "Press these together while a trainer is running"));
+                "Press these together while a trainer is running") { Glyph = Glyphs.Game });
             if (Main.OpenOverlay is not null)
             {
                 rows.Add(new ActionRow("Open the overlay now", Glyphs.View, Main.OpenOverlay, "Open", "Try it out"));
@@ -135,29 +135,29 @@ public sealed class SettingsViewModel : RowListPageViewModel
                 AppearanceMode.Windows => "Follows Windows' light or dark mode and accent colour",
                 AppearanceMode.Custom => "Your own choice of light or dark and accent colour",
                 _ => "The original dark look in Trainer Deck blue",
-            }));
+            }) { Glyph = Glyphs.Color });
         if (Current.Appearance == AppearanceMode.Custom)
         {
             rows.Add(new ChoiceRow("Mode", ["Dark", "Light", "Follow Windows"], (int)Current.CustomTheme,
-                i => Change(s => s.CustomTheme = (BaseTheme)i)));
+                i => Change(s => s.CustomTheme = (BaseTheme)i)) { Glyph = Glyphs.Brightness });
             rows.Add(new ActionRow("Accent colour", Glyphs.Color, PickAccent, "Choose",
                 $"{Current.CustomAccent}  ·  from the Windows colours or any hex code"));
         }
 
         rows.Add(new HeaderRow("Window"));
         rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),
-            "F11 switches at any time"));
+            "F11 switches at any time") { Glyph = Glyphs.FullScreen });
         rows.Add(new ChoiceRow("Close button", ["Exit Trainer Deck", "Keep running in the tray"], (int)Current.CloseButton,
             i => _s.Settings.Update(s => s.CloseButton = (CloseButtonBehavior)i),
-            "In the tray, Trainer Deck keeps listening for the overlay and cheat shortcuts while a trainer runs"));
+            "In the tray, Trainer Deck keeps listening for the overlay and cheat shortcuts while a trainer runs") { Glyph = Glyphs.Power });
 
         rows.Add(new HeaderRow("Steam"));
         bool hasSteam = _s.Steam.SteamPath is not null;
         rows.Add(new ToggleRow("Use games installed with Steam", Current.UseLocalSteamData, v => SetSteam(s => s.UseLocalSteamData = v),
             hasSteam ? "Card art and a Play button for installed games. Read from your Steam folder; nothing is downloaded." : "Steam isn't installed on this PC")
-        { IsEnabled = hasSteam });
+        { Glyph = Glyphs.Game, IsEnabled = hasSteam });
         rows.Add(new ToggleRow("Download art from Steam", Current.DownloadSteamArt, v => SetSteam(s => s.DownloadSteamArt = v),
-            "Looks up games you don't have installed on the Steam store and downloads their library art"));
+            "Looks up games you don't have installed on the Steam store and downloads their library art") { Glyph = Glyphs.Image });
 
         rows.Add(new HeaderRow("Help"));
         rows.Add(new ActionRow("Antivirus tips", Glyphs.Shield, Main.OpenAntivirusNotice, "Open", "Why trainers get flagged, and how to stop it"));

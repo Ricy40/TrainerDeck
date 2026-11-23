@@ -2,30 +2,43 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:TrainerDeck.UI.ViewModels">
 
-    <!-- Row container: selection is driven by the view model, so items never take keyboard focus. -->
+    <!-- Row container: a Windows 11 Settings card. Selection is driven by the view model, so items never take keyboard focus. -->
     <Style x:Key="RowItemStyle" TargetType="ListBoxItem">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Margin" Value="0,0,0,6" />
+        <Setter Property="Margin" Value="0,0,0,4" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Bd" CornerRadius="12" Background="Transparent" BorderThickness="2" BorderBrush="Transparent">
-                        <ContentPresenter />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="Bd" CornerRadius="6" BorderThickness="1" MinHeight="68"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <Border x:Name="FocusRing" Margin="-3" CornerRadius="9" BorderThickness="2" Opacity="0" IsHitTestVisible="False"
+                                BorderBrush="{DynamicResource FocusStrokeColorOuterBrush}">
+                            <Border CornerRadius="7" BorderThickness="1" BorderBrush="{DynamicResource FocusStrokeColorInnerBrush}" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
                                 <Condition Binding="{Binding IsSelectable}" Value="True" />
                             </MultiDataTrigger.Conditions>
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
                         </MultiDataTrigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceHighBrush}" />
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
                         </Trigger>
+                        <DataTrigger Binding="{Binding IsCard}" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="Transparent" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="Transparent" />
+                            <Setter TargetName="Bd" Property="MinHeight" Value="0" />
+                        </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -50,27 +63,61 @@
         </Setter>
     </Style>
 
+    <!-- On/off switch (Fluent ToggleSwitch, sized for touch) -->
+    <Style x:Key="SwitchTrack" TargetType="Border">
+        <Setter Property="Width" Value="48" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource ControlAltFillColorSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="SwitchKnob" TargetType="Ellipse">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Fill" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <!-- Value box for choices and cheat values (looks like a Windows combo box) -->
+    <Style x:Key="ValueBox" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <!-- Shared left part of a row: glyph, label, detail -->
     <DataTemplate x:Key="RowText" DataType="{x:Type vm:RowViewModel}">
         <DockPanel>
             <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" Style="{StaticResource Glyph}" FontSize="20" Width="40"
-                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                       VerticalAlignment="Center" Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
             <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="{Binding Detail}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0"
+                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="16" TextTrimming="CharacterEllipsis"
+                           Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
+                <TextBlock Text="{Binding Detail}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,0,0"
                            TextWrapping="Wrap" Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
         </DockPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:HeaderRow}">
-        <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" FontSize="13" FontWeight="SemiBold"
-                   Margin="14,22,0,4" Typography.Capitals="AllSmallCaps" />
+        <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="15" FontWeight="SemiBold" Margin="2,24,0,4" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ActionRow}">
-        <Grid x:Name="Root" Margin="16,12">
-            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource RowText}" />
+        <Grid x:Name="Root" Margin="16,12" TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource RowText}" Margin="0,0,16,0" />
+            <TextBlock Grid.Column="1" Text="&#xE76C;" Style="{StaticResource Glyph}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" />
         </Grid>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding IsEnabled}" Value="False">
@@ -83,23 +130,25 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ToggleRow}">
-        <Grid x:Name="Root" Margin="16,12">
+        <Grid x:Name="Root" Margin="16,12" TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource RowText}" Margin="0,0,24,0" />
-            <Border x:Name="Track" Grid.Column="1" Width="48" Height="26" CornerRadius="13" VerticalAlignment="Center"
-                    Background="{DynamicResource SurfaceHigherBrush}" BorderBrush="{DynamicResource TextTertiaryBrush}" BorderThickness="1">
-                <Ellipse x:Name="Knob" Width="18" Height="18" Margin="4,0" HorizontalAlignment="Left" Fill="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock x:Name="State" Grid.Column="1" Text="Off" Style="{StaticResource TextBase}" FontSize="14" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Border x:Name="Track" Grid.Column="2" Style="{StaticResource SwitchTrack}">
+                <Ellipse x:Name="Knob" Style="{StaticResource SwitchKnob}" />
             </Border>
         </Grid>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding Value}" Value="True">
+                <Setter TargetName="State" Property="Text" Value="On" />
                 <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}" />
                 <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
-                <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource BackgroundBrush}" />
+                <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource TextOnAccentBrush}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding IsEnabled}" Value="False">
                 <Setter TargetName="Root" Property="Opacity" Value="0.4" />
@@ -109,38 +158,36 @@
 
     <!-- Cheat: hotkey chip, name, value, controller shortcut, on/off switch -->
     <DataTemplate DataType="{x:Type vm:CheatRow}">
-        <Grid x:Name="Root" Margin="16,10">
+        <Grid x:Name="Root" Margin="16,10" TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="128" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Border HorizontalAlignment="Left" VerticalAlignment="Center" Background="{DynamicResource SurfaceHigherBrush}" CornerRadius="6" Padding="8,3"
+            <Border Style="{StaticResource KeyCap}" HorizontalAlignment="Left"
                     Visibility="{Binding HasHotkey, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="{Binding HotkeyText}" Style="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold" />
             </Border>
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
-                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="16" TextTrimming="CharacterEllipsis" />
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding Detail}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,12,0"
+                    <TextBlock Text="{Binding Detail}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,12,0"
                                Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
-                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0" Foreground="{DynamicResource AccentBrush}"
+                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,0,0" Foreground="{DynamicResource AccentTextBrush}"
                                Visibility="{Binding HasShortcut, Converter={StaticResource BoolToVisibility}}">
                         <Run Text="&#xE7FC;" FontFamily="{StaticResource IconFont}" /><Run Text="  " /><Run Text="{Binding ShortcutText, Mode=OneWay}" />
                     </TextBlock>
                 </StackPanel>
             </StackPanel>
-            <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0" Padding="12,4" CornerRadius="8"
-                    Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+            <Border Grid.Column="2" Style="{StaticResource ValueBox}" Margin="0,0,20,0" MinWidth="64"
                     Visibility="{Binding HasValue, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="{Binding Value}" Style="{StaticResource TextBase}" FontSize="16" FontWeight="SemiBold"
-                           Foreground="{DynamicResource AccentBrush}" MinWidth="44" TextAlignment="Center" />
+                <TextBlock Text="{Binding Value}" Style="{StaticResource TextBase}" FontSize="15" FontWeight="SemiBold"
+                           VerticalAlignment="Center" TextAlignment="Center" />
             </Border>
             <Grid Grid.Column="3" Width="48" VerticalAlignment="Center">
-                <Border x:Name="Track" Width="48" Height="26" CornerRadius="13"
-                        Background="{DynamicResource SurfaceHigherBrush}" BorderBrush="{DynamicResource TextTertiaryBrush}" BorderThickness="1">
-                    <Ellipse x:Name="Knob" Width="18" Height="18" Margin="4,0" HorizontalAlignment="Left" Fill="{DynamicResource TextSecondaryBrush}" />
+                <Border x:Name="Track" Style="{StaticResource SwitchTrack}">
+                    <Ellipse x:Name="Knob" Style="{StaticResource SwitchKnob}" />
                 </Border>
                 <TextBlock x:Name="ActionGlyph" Text="&#xE768;" Style="{StaticResource Glyph}" FontSize="18" HorizontalAlignment="Center"
                            Foreground="{DynamicResource TextSecondaryBrush}" Visibility="Collapsed" />
@@ -151,7 +198,7 @@
                 <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}" />
                 <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
-                <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource BackgroundBrush}" />
+                <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource TextOnAccentBrush}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding StateKnown}" Value="False">
                 <Setter TargetName="Track" Property="Visibility" Value="Collapsed" />
@@ -164,18 +211,20 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ChoiceRow}">
-        <Grid Margin="16,12">
+        <Grid Margin="16,12" TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource RowText}" Margin="0,0,24,0" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="&#xE76B;" Style="{StaticResource Glyph}" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding ValueText}" Style="{StaticResource TextBase}" FontSize="16" FontWeight="SemiBold"
-                           Foreground="{DynamicResource AccentBrush}" MinWidth="150" TextAlignment="Center" Margin="10,0" />
-                <TextBlock Text="&#xE76C;" Style="{StaticResource Glyph}" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
-            </StackPanel>
+            <Border Grid.Column="1" Style="{StaticResource ValueBox}" MinWidth="200">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Text="&#xE76B;" Style="{StaticResource Glyph}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock DockPanel.Dock="Right" Text="&#xE76C;" Style="{StaticResource Glyph}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding ValueText}" Style="{StaticResource TextBase}" FontSize="15"
+                               TextAlignment="Center" VerticalAlignment="Center" Margin="12,0" />
+                </DockPanel>
+            </Border>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

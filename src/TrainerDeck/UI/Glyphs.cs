@@ -28,5 +28,10 @@ public static class Glyphs
     public const string Download = "";
     public const string Document = "";
     public const string Keyboard = "";
+    public const string Layers = "";
+    public const string FullScreen = "";
+    public const string Brightness = "";
+    public const string Power = "";
+    public const string Rocket = "";
     public const string Color = "";
 }
