@@ -27,7 +27,7 @@ public partial class SetupWindow : Window
         InstallButton.Content = isUpdate ? "Update" : "Install";
         BrowseButton.IsEnabled = !isUpdate;
         Logo.Source = IconExtractorSafe();
-        SourceInitialized += (_, _) => WindowInterop.ApplyDarkTitleBar(this, (System.Windows.Media.Color)FindResource("BackgroundColor"));
+        UI.Theme.ThemeManager.Instance?.Attach(this);
     }
 
     private static System.Windows.Media.ImageSource? IconExtractorSafe() =>

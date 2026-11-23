@@ -7,8 +7,8 @@
         <TextBlock Text="{Binding Prompt}" Style="{StaticResource TextSecondary}" FontSize="16" Margin="0,12,0,24" TextWrapping="Wrap" LineHeight="25" />
         <TextBox x:Name="Editor" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
                  FontSize="28" FontFamily="{StaticResource DisplayFont}" Padding="16,10"
-                 Background="{StaticResource SurfaceHighBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                 CaretBrush="{StaticResource AccentBrush}" SelectionBrush="{StaticResource AccentBrush}"
-                 BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" />
+                 Background="{DynamicResource SurfaceHighBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                 CaretBrush="{DynamicResource AccentBrush}" SelectionBrush="{DynamicResource AccentBrush}"
+                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2" />
     </StackPanel>
 </UserControl>

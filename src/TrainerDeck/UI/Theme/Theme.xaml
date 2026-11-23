@@ -3,34 +3,11 @@
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
                     xmlns:ui="clr-namespace:TrainerDeck.UI">
 
-    <!-- Palette: near-black blue-greys, one cool accent, warm gold for favourites, green for running. -->
-    <Color x:Key="BackgroundColor">#0D0F13</Color>
-    <Color x:Key="SurfaceColor">#151820</Color>
-    <Color x:Key="SurfaceHighColor">#1E222D</Color>
-    <Color x:Key="SurfaceHigherColor">#272C3A</Color>
-    <Color x:Key="BorderColor">#2C3240</Color>
-    <Color x:Key="TextPrimaryColor">#F3F5F9</Color>
-    <Color x:Key="TextSecondaryColor">#A3AAB8</Color>
-    <Color x:Key="TextTertiaryColor">#6E7686</Color>
-    <Color x:Key="AccentColor">#4CC2FF</Color>
-    <Color x:Key="AccentDimColor">#1F4A63</Color>
-    <Color x:Key="FavouriteColor">#FFC83D</Color>
-    <Color x:Key="RunningColor">#3DDC84</Color>
-    <Color x:Key="DangerColor">#FF6B6B</Color>
+    <!-- Theme colours (Background, Surface, Text*, Accent, ...) are supplied at runtime by ThemeManager. -->
 
-    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
-    <SolidColorBrush x:Key="SurfaceHighBrush" Color="{StaticResource SurfaceHighColor}" />
-    <SolidColorBrush x:Key="SurfaceHigherBrush" Color="{StaticResource SurfaceHigherColor}" />
-    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
-    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}" />
-    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-    <SolidColorBrush x:Key="AccentDimBrush" Color="{StaticResource AccentDimColor}" />
-    <SolidColorBrush x:Key="FavouriteBrush" Color="{StaticResource FavouriteColor}" />
-    <SolidColorBrush x:Key="RunningBrush" Color="{StaticResource RunningColor}" />
-    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <!-- Text and badges that sit on game artwork stay light in every theme. -->
+    <SolidColorBrush x:Key="OnImageTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="OnImageTextSecondaryBrush" Color="#D9FFFFFF" />
     <SolidColorBrush x:Key="BadgeBrush" Color="#B8000000" />
 
     <LinearGradientBrush x:Key="CardScrimBrush" StartPoint="0,0" EndPoint="0,1">

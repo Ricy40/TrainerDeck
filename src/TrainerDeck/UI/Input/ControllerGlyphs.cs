@@ -8,7 +8,7 @@ public readonly record struct ButtonGlyph(string Text, bool Round, Color Color);
 
 public static class ControllerGlyphs
 {
-    private static readonly Color Neutral = Color.FromRgb(0xF3, 0xF5, 0xF9);
+    public static readonly Color Neutral = Color.FromRgb(0xF3, 0xF5, 0xF9);
 
     private static readonly GamepadButtons[] Priority =
     [
@@ -97,7 +97,6 @@ public static class ControllerGlyphs
         },
     };
 
-    // Readable name for one or more buttons, e.g. "View + A" or "D-pad ↑".
     public static string Describe(GamepadButtons buttons, ControllerKind kind)
     {
         var parts = new List<string>();

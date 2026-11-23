@@ -34,7 +34,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="25" Padding="4" VerticalAlignment="Center">
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="25" Padding="4" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <RadioButton Style="{StaticResource PillTab}" GroupName="LibraryTabs" Content="All"
                                  IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.All}}" />
@@ -49,7 +49,7 @@
                 <Button Style="{StaticResource AccentButton}" Margin="0,0,10,0" Command="{Binding OpenZipsCommand}" Focusable="False"
                         ToolTip="{Binding PendingZipsLabel}" Visibility="{Binding HasPendingZips, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource Glyph}" Text="&#xF012;" FontSize="15" Foreground="#06121A" />
+                        <TextBlock Style="{StaticResource Glyph}" Text="&#xF012;" FontSize="15" Foreground="{DynamicResource TextOnAccentBrush}" />
                         <TextBlock Text="{Binding PendingZipCount}" VerticalAlignment="Center" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
@@ -131,7 +131,7 @@
                         Visibility="{Binding ShowOpenFolder, Converter={StaticResource BoolToVisibility}}">
                 <Button Style="{StaticResource AccentButton}" Command="{Binding AddTrainerCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="15" Margin="0,0,8,0" Foreground="#06121A" />
+                        <TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="15" Margin="0,0,8,0" Foreground="{DynamicResource TextOnAccentBrush}" />
                         <TextBlock Text="Add a trainer" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -168,30 +168,30 @@
                     </Style.Triggers>
                 </Style>
             </Grid.Style>
-            <Rectangle Fill="#990D0F13" />
-            <Border Width="168" Height="168" CornerRadius="32" Background="{StaticResource SurfaceHighBrush}"
-                    BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Rectangle Fill="{DynamicResource ScrimBrush}" />
+            <Border Width="168" Height="168" CornerRadius="32" Background="{DynamicResource SurfaceHighBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding RailLetter}" Style="{StaticResource TextTitle}" FontSize="96"
                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-8,0,0" />
             </Border>
             <Border HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,24,0" Padding="6,10"
-                    Background="{StaticResource SurfaceBrush}" CornerRadius="22">
+                    Background="{DynamicResource SurfaceBrush}" CornerRadius="22">
                 <ItemsControl ItemsSource="{Binding RailLetters}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:RailLetterViewModel}">
                             <Grid Width="32" Height="{Binding ActualHeight, ElementName=Rail, Converter={StaticResource RailItemHeight}}">
-                                <Ellipse x:Name="Dot" Width="28" Height="28" Fill="{StaticResource AccentBrush}" Visibility="Collapsed" />
+                                <Ellipse x:Name="Dot" Width="28" Height="28" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
                                 <TextBlock x:Name="Letter" Text="{Binding Text}" Style="{StaticResource TextBase}" FontSize="14" FontWeight="SemiBold"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextTertiaryBrush}" Opacity="0.5" />
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}" Opacity="0.5" />
                             </Grid>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding IsAvailable}" Value="True">
                                     <Setter TargetName="Letter" Property="Opacity" Value="1" />
-                                    <Setter TargetName="Letter" Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                    <Setter TargetName="Letter" Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsCurrent}" Value="True">
                                     <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
-                                    <Setter TargetName="Letter" Property="Foreground" Value="#06121A" />
+                                    <Setter TargetName="Letter" Property="Foreground" Value="{DynamicResource TextOnAccentBrush}" />
                                     <Setter TargetName="Letter" Property="Opacity" Value="1" />
                                 </DataTrigger>
                             </DataTemplate.Triggers>

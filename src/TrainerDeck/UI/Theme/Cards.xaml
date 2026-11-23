@@ -21,11 +21,11 @@
                 <ControlTemplate TargetType="ListBoxItem">
                     <Grid>
                         <Border x:Name="HoverRing" Margin="-5" CornerRadius="19" BorderThickness="3"
-                                BorderBrush="{StaticResource TextTertiaryBrush}" Opacity="0" />
+                                BorderBrush="{DynamicResource TextTertiaryBrush}" Opacity="0" />
                         <Border x:Name="FocusRing" Margin="-6" CornerRadius="20" BorderThickness="3"
-                                BorderBrush="{StaticResource AccentBrush}" Opacity="0">
+                                BorderBrush="{DynamicResource AccentBrush}" Opacity="0">
                             <Border.Effect>
-                                <DropShadowEffect x:Name="Glow" Color="{StaticResource AccentColor}" BlurRadius="18" ShadowDepth="0" Opacity="0" />
+                                <DropShadowEffect x:Name="Glow" Color="{DynamicResource AccentColor}" BlurRadius="18" ShadowDepth="0" Opacity="0" />
                             </Border.Effect>
                         </Border>
                         <ContentPresenter />
@@ -88,17 +88,17 @@
                             <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.45" />
                         </Image.Effect>
                     </Image>
-                    <TextBlock x:Name="Initial" Text="{Binding Initial}" Style="{StaticResource TextTitle}" FontSize="64"
+                    <TextBlock x:Name="Initial" Text="{Binding Initial}" Style="{StaticResource TextTitle}" FontSize="64" Foreground="{StaticResource OnImageTextBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.85" Visibility="Collapsed" />
                 </Grid>
 
                 <Rectangle Fill="{StaticResource CardScrimBrush}" VerticalAlignment="Bottom" Height="130" />
 
                 <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,14">
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource TextBase}" FontFamily="{StaticResource DisplayFont}"
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource TextBase}" FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource OnImageTextBrush}"
                                FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                                MaxHeight="46" LineHeight="22" LineStackingStrategy="BlockLineHeight" />
-                    <TextBlock Text="{Binding Version}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0"
+                    <TextBlock Text="{Binding Version}" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0" Foreground="{StaticResource OnImageTextSecondaryBrush}"
                                TextTrimming="CharacterEllipsis" Visibility="{Binding HasVersion, Converter={StaticResource BoolToVisibility}}" />
                 </StackPanel>
 
@@ -106,14 +106,14 @@
                 <Border Background="{StaticResource BadgeBrush}" CornerRadius="8" Padding="8,3" Margin="10"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding HasOptions, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="{Binding OptionsBadge}" Style="{StaticResource TextBase}" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding OptionsBadge}" Style="{StaticResource TextBase}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OnImageTextBrush}" />
                 </Border>
                 <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10">
                     <Border Background="{StaticResource BadgeBrush}" CornerRadius="8" Padding="6,4" HorizontalAlignment="Left"
                             Visibility="{Binding IsFavourite, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphStarFill}" FontSize="14" Foreground="{StaticResource FavouriteBrush}" />
+                        <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphStarFill}" FontSize="14" Foreground="{DynamicResource FavouriteBrush}" />
                     </Border>
-                    <Border Background="{StaticResource RunningBrush}" CornerRadius="8" Padding="8,3" Margin="0,6,0,0" HorizontalAlignment="Left"
+                    <Border Background="{DynamicResource RunningBrush}" CornerRadius="8" Padding="8,3" Margin="0,6,0,0" HorizontalAlignment="Left"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="12" FontWeight="Bold" Foreground="#05210F" />
                     </Border>

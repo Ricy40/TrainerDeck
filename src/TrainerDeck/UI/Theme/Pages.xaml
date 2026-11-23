@@ -14,6 +14,9 @@
     <DataTemplate DataType="{x:Type vm:TextEntryViewModel}">
         <views:TextEntryView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:AccentPickerViewModel}">
+        <views:AccentPickerView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:RowListPageViewModel}">
         <views:RowListView />
     </DataTemplate>

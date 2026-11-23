@@ -16,6 +16,7 @@ using TrainerDeck.Core.Launch;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.UI;
+using TrainerDeck.UI.Theme;
 using TrainerDeck.UI.ViewModels;
 
 namespace TrainerDeck;
@@ -127,6 +128,9 @@ public partial class App : Application
             relaunchDeclined = true;
         }
 
+        var theme = new ThemeManager(settings);
+        theme.Start();
+
         var store = LibraryStore.Load(paths.LibraryFile, Log.Warn);
         _library = new TrainerLibrary(settings, paths, store);
         var steam = new SteamService(_library, settings, paths);
@@ -138,6 +142,7 @@ public partial class App : Application
         _main = new MainViewModel(new AppServices(_library, art, _launcher, steam, settings, paths, elevated, cheats), Dispatcher);
         string[] args = e.Args;
         _main.RestartElevatedRequested += () => RestartElevated(args);
+        theme.Changed += (_, _) => _main.RefreshHints();
         window = new MainWindow(_main, settings);
         MainWindow = window;
         window.Show();
@@ -267,6 +272,7 @@ public partial class App : Application
 
         string? existing = testDir is null ? Installer.ExistingInstallDirectory() : null;
         string target = testDir ?? existing ?? InstallLayout.DefaultTargetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+        new ThemeManager(null).Start();
         var setup = new SetupWindow(target, userSid, systemIntegration: testDir is null, isUpdate: existing is not null);
         MainWindow = setup;
         setup.Show();

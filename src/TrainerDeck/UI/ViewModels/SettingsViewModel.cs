@@ -4,6 +4,7 @@ using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.Core.Text;
+using TrainerDeck.Core.Theming;
 
 namespace TrainerDeck.UI.ViewModels;
 
@@ -126,6 +127,23 @@ public sealed class SettingsViewModel : RowListPageViewModel
             }
         }
 
+        rows.Add(new HeaderRow("Appearance"));
+        rows.Add(new ChoiceRow("Colours", ["Trainer Deck", "Match Windows", "Custom"], (int)Current.Appearance,
+            i => Change(s => s.Appearance = (AppearanceMode)i),
+            Current.Appearance switch
+            {
+                AppearanceMode.Windows => "Follows Windows' light or dark mode and accent colour",
+                AppearanceMode.Custom => "Your own choice of light or dark and accent colour",
+                _ => "The original dark look in Trainer Deck blue",
+            }));
+        if (Current.Appearance == AppearanceMode.Custom)
+        {
+            rows.Add(new ChoiceRow("Mode", ["Dark", "Light", "Follow Windows"], (int)Current.CustomTheme,
+                i => Change(s => s.CustomTheme = (BaseTheme)i)));
+            rows.Add(new ActionRow("Accent colour", Glyphs.Color, PickAccent, "Choose",
+                $"{Current.CustomAccent}  ·  from the Windows colours or any hex code"));
+        }
+
         rows.Add(new HeaderRow("Window"));
         rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),
             "F11 switches at any time"));
@@ -158,6 +176,9 @@ public sealed class SettingsViewModel : RowListPageViewModel
         ("LB + RB + View", "LeftShoulder|RightShoulder|Back"),
         ("LB + RB + Menu", "LeftShoulder|RightShoulder|Start"),
     ];
+
+    private void PickAccent() =>
+        Main.Push(new AccentPickerViewModel(Main, Current.CustomAccent, hex => Change(s => s.CustomAccent = hex)));
 
     private void Change(Action<AppSettings> change)
     {

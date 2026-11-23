@@ -4,7 +4,6 @@ namespace TrainerDeck.Tests.Art;
 
 public class IcoWriterTests
 {
-    // Minimal PNG header: signature + IHDR with the given size (enough for the writer, not a viewable image).
     private static byte[] FakePng(int w, int h, int extra = 10)
     {
         var b = new byte[24 + extra];

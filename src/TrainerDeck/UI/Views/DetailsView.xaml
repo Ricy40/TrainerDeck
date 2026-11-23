@@ -11,9 +11,9 @@
             <Rectangle>
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#400D0F13" Offset="0" />
-                        <GradientStop Color="#B00D0F13" Offset="0.6" />
-                        <GradientStop Color="{StaticResource BackgroundColor}" Offset="1" />
+                        <GradientStop Color="{DynamicResource HeroFadeTopColor}" Offset="0" />
+                        <GradientStop Color="{DynamicResource HeroFadeMidColor}" Offset="0.6" />
+                        <GradientStop Color="{DynamicResource BackgroundColor}" Offset="1" />
                     </LinearGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>
@@ -33,7 +33,7 @@
                         <VisualBrush Visual="{Binding ElementName=CoverMask}" />
                     </Grid.OpacityMask>
                     <Rectangle Fill="{Binding ArtBackground}" />
-                    <TextBlock Text="{Binding Initial}" Style="{StaticResource TextTitle}" FontSize="110" Opacity="0.85"
+                    <TextBlock Text="{Binding Initial}" Style="{StaticResource TextTitle}" FontSize="110" Opacity="0.85" Foreground="{StaticResource OnImageTextBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="{Binding DisplayIcon, Converter={StaticResource NullToVisibilityInverse}}" />
                     <Image x:Name="IconImage" Source="{Binding DisplayIcon}" Width="128" Height="128" RenderOptions.BitmapScalingMode="HighQuality">
@@ -43,7 +43,7 @@
                     </Image>
                     <Image Source="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                 </Grid>
-                <Border Background="{StaticResource RunningBrush}" CornerRadius="8" Padding="10,4" Margin="12"
+                <Border Background="{DynamicResource RunningBrush}" CornerRadius="8" Padding="10,4" Margin="12"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="13" FontWeight="Bold" Foreground="#05210F" />
@@ -65,9 +65,9 @@
                                    x:Name="TitleText" />
                         <TextBox x:Name="RenameBox" Text="{Binding RenameText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="32" FontFamily="{StaticResource DisplayFont}" FontWeight="SemiBold" Padding="12,6"
-                                 Background="{StaticResource SurfaceHighBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                                 CaretBrush="{StaticResource AccentBrush}" SelectionBrush="{StaticResource AccentBrush}"
-                                 BorderBrush="{StaticResource AccentBrush}" BorderThickness="2"
+                                 Background="{DynamicResource SurfaceHighBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                 CaretBrush="{DynamicResource AccentBrush}" SelectionBrush="{DynamicResource AccentBrush}"
+                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                     <TextBlock Text="{Binding Subtitle}" Style="{StaticResource TextSecondary}" FontSize="17" Margin="0,8,0,0"

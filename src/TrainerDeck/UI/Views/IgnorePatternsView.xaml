@@ -10,7 +10,7 @@
         <StackPanel Margin="0,0,0,18">
             <TextBlock Text="Ignore patterns" Style="{StaticResource TextTitle}" FontSize="32" />
             <TextBlock Style="{StaticResource TextSecondary}" FontSize="16" Margin="0,14,0,0" TextWrapping="Wrap" LineHeight="25">
-                One pattern per line. <Run FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}">*</Run> matches anything.
+                One pattern per line. <Run FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}">*</Run> matches anything.
                 Patterns without a slash match file or folder names anywhere (<Run FontFamily="Consolas">*Setup*.exe</Run>, <Run FontFamily="Consolas">Old Versions</Run>);
                 patterns with a slash match paths from the trainer folder (<Run FontFamily="Consolas">Archive/*</Run>). Lines starting with # are comments.
                 Changes are saved when you go back.
@@ -19,8 +19,8 @@
         <TextBox x:Name="Editor" Grid.Row="1" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
                  AcceptsReturn="True" AcceptsTab="False" VerticalScrollBarVisibility="Auto" TextWrapping="NoWrap"
                  FontFamily="Consolas" FontSize="17" Padding="16,12"
-                 Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                 CaretBrush="{StaticResource AccentBrush}" SelectionBrush="{StaticResource AccentBrush}"
-                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" VerticalContentAlignment="Top" />
+                 Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                 CaretBrush="{DynamicResource AccentBrush}" SelectionBrush="{DynamicResource AccentBrush}"
+                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalContentAlignment="Top" />
     </Grid>
 </UserControl>

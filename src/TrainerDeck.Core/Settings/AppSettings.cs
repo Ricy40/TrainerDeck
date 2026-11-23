@@ -38,6 +38,12 @@ public sealed class AppSettings
 
     public CloseButtonBehavior CloseButton { get; set; } = CloseButtonBehavior.Exit;
 
+    public TrainerDeck.Core.Theming.AppearanceMode Appearance { get; set; } = TrainerDeck.Core.Theming.AppearanceMode.TrainerDeck;
+
+    public TrainerDeck.Core.Theming.BaseTheme CustomTheme { get; set; } = TrainerDeck.Core.Theming.BaseTheme.Dark;
+
+    public string CustomAccent { get; set; } = "#0078D4";
+
     public bool OverlayEnabled { get; set; } = true;
 
     public string OverlayHotkey { get; set; } = "Ctrl+Shift+F12";

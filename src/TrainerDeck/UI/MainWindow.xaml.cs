@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel _vm;
     private readonly SettingsStore _settings;
     private readonly WindowModeController _mode;
+    private readonly Action? _repaintBackdrop;
 
     public MainWindow(MainViewModel vm, SettingsStore settings)
     {
@@ -35,7 +36,7 @@ public partial class MainWindow : Window
                 Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, FocusPage);
             }
         };
-        SourceInitialized += (_, _) => WindowInterop.ApplyDarkTitleBar(this, (Color)FindResource("BackgroundColor"));
+        _repaintBackdrop = Theme.ThemeManager.Instance?.Attach(this, () => _mode.IsFullScreen);
         PreviewKeyDown += OnPreviewKeyDown;
         Deactivated += (_, _) => _vm.Library.CloseRail();
         PreviewTextInput += OnPreviewTextInput;
@@ -105,6 +106,7 @@ public partial class MainWindow : Window
     {
         bool full = !_mode.IsFullScreen;
         _mode.SetFullScreen(full);
+        _repaintBackdrop?.Invoke();
         _settings.Update(s => s.StartFullScreen = full);
     }
 

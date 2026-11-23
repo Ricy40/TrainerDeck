@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              VerticalAlignment="Bottom" HorizontalAlignment="Center" IsHitTestVisible="False" Focusable="False">
     <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="40,0,40,22" MaxWidth="900"
-            CornerRadius="14" Padding="20,13" Background="{StaticResource SurfaceHigherBrush}"
+            CornerRadius="14" Padding="20,13" Background="{DynamicResource SurfaceHigherBrush}"
             BorderThickness="1" IsHitTestVisible="False" Opacity="0">
         <Border.RenderTransform>
             <TranslateTransform Y="16" />
@@ -13,7 +13,7 @@
         </Border.Effect>
         <Border.Style>
             <Style TargetType="Border">
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsMessageVisible}" Value="True">
                         <DataTrigger.EnterActions>
@@ -36,7 +36,7 @@
                         </DataTrigger.ExitActions>
                     </DataTrigger>
                     <DataTrigger Binding="{Binding MessageIsError}" Value="True">
-                        <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -46,11 +46,11 @@
                 <TextBlock.Style>
                     <Style TargetType="TextBlock" BasedOn="{StaticResource Glyph}">
                         <Setter Property="Text" Value="&#xE946;" />
-                        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding MessageIsError}" Value="True">
                                 <Setter Property="Text" Value="&#xE783;" />
-                                <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

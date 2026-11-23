@@ -1,13 +1,12 @@
 namespace TrainerDeck.Core.Art;
 
-// Packs PNG images into a Windows .ico (PNG-compressed entries, supported since Windows Vista).
+
 public static class IcoWriter
 {
     public const int MaxSize = 256;
 
     public sealed record IconImage(int Width, int Height, byte[] Png);
 
-    // Reads the size from the PNG header; null if the bytes aren't a PNG.
     public static IconImage? FromPng(byte[] png)
     {
         ReadOnlySpan<byte> signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -21,7 +20,6 @@ public static class IcoWriter
         return new IconImage(width, height, png);
     }
 
-    // Square images up to 256 px, one per size, smallest first. Larger or non-square images are skipped.
     public static List<IconImage> Select(IEnumerable<IconImage> images) => images
         .Where(i => i.Width == i.Height && i.Width is > 0 and <= MaxSize)
         .GroupBy(i => i.Width)
@@ -44,7 +42,6 @@ public static class IcoWriter
         int offset = 6 + (16 * images.Count);
         foreach (IconImage image in images)
         {
-            // 256 is stored as 0 in the one-byte size fields.
             w.Write((byte)(image.Width >= MaxSize ? 0 : image.Width));
             w.Write((byte)(image.Height >= MaxSize ? 0 : image.Height));
             w.Write((byte)0);
@@ -65,7 +62,6 @@ public static class IcoWriter
         return ms.ToArray();
     }
 
-    // Builds an .ico from every PNG in a folder. Returns the sizes that went in.
     public static IReadOnlyList<int> PackFolder(string folder, string outputIco)
     {
         List<IconImage> images = Select(Directory.EnumerateFiles(folder, "*.png")

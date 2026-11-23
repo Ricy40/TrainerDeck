@@ -7,7 +7,7 @@
         xmlns:controls="clr-namespace:TrainerDeck.UI.Controls"
         Title="Trainer Deck" Width="1280" Height="800" MinWidth="760" MinHeight="500"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" SnapsToDevicePixels="True">
 
     <Grid>
@@ -25,7 +25,7 @@
         <controls:ToastView />
 
         <!-- Footer: context button hints -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
                 Height="56" Padding="40,0">
             <Grid>
                 <Grid.ColumnDefinitions>
