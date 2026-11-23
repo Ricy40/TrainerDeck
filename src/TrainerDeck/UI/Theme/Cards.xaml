@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:TrainerDeck.UI.ViewModels">
 
-    <!-- Container: focus ring + scale-up when selected (= focused card), softer ring on hover. -->
+    <!-- Container: elevation shadow, Fluent focus ring and a scale-up on the selected (focused) card. -->
     <Style x:Key="CardItemStyle" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Background" Value="Transparent" />
@@ -20,43 +20,52 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
                     <Grid>
-                        <Border x:Name="HoverRing" Margin="-5" CornerRadius="19" BorderThickness="3"
-                                BorderBrush="{DynamicResource TextTertiaryBrush}" Opacity="0" />
-                        <Border x:Name="FocusRing" Margin="-6" CornerRadius="20" BorderThickness="3"
-                                BorderBrush="{DynamicResource AccentBrush}" Opacity="0">
+                        <Border x:Name="Elevation" CornerRadius="8" Background="Black" Margin="1">
                             <Border.Effect>
-                                <DropShadowEffect x:Name="Glow" Color="{DynamicResource AccentColor}" BlurRadius="18" ShadowDepth="0" Opacity="0" />
+                                <DropShadowEffect x:Name="Shadow" BlurRadius="14" ShadowDepth="3" Direction="270" Color="Black"
+                                                  Opacity="{DynamicResource ShadowOpacity}" />
                             </Border.Effect>
                         </Border>
                         <ContentPresenter />
+                        <Border x:Name="HoverRing" Margin="-3" CornerRadius="11" BorderThickness="2"
+                                BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" Opacity="0" IsHitTestVisible="False" />
+                        <Border x:Name="FocusRing" Margin="-4" CornerRadius="12" BorderThickness="3" Opacity="0" IsHitTestVisible="False"
+                                BorderBrush="{DynamicResource FocusStrokeColorOuterBrush}">
+                            <Border CornerRadius="9" BorderThickness="1" BorderBrush="{DynamicResource FocusStrokeColorInnerBrush}" />
+                        </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="HoverRing" Property="Opacity" Value="0.7" />
+                            <Setter TargetName="HoverRing" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Panel.ZIndex" Value="10" />
+                            <Setter TargetName="HoverRing" Property="Opacity" Value="0" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.06" Duration="0:0:0.14">
-                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.06" Duration="0:0:0.14">
-                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.12" />
-                                        <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.05" Duration="0:0:0.167"
+                                                         EasingFunction="{StaticResource FluentDecelerate}" />
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.05" Duration="0:0:0.167"
+                                                         EasingFunction="{StaticResource FluentDecelerate}" />
+                                        <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.083" />
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="BlurRadius" To="32" Duration="0:0:0.167"
+                                                         EasingFunction="{StaticResource FluentDecelerate}" />
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="ShadowDepth" To="10" Duration="0:0:0.167"
+                                                         EasingFunction="{StaticResource FluentDecelerate}" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1" Duration="0:0:0.12" />
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1" Duration="0:0:0.12" />
-                                        <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1" />
-                                        <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1" Duration="0:0:0.1"
+                                                         EasingFunction="{StaticResource FluentAccelerate}" />
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1" Duration="0:0:0.1"
+                                                         EasingFunction="{StaticResource FluentAccelerate}" />
+                                        <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.083" />
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="BlurRadius" To="14" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="ShadowDepth" To="3" Duration="0:0:0.1" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -70,7 +79,7 @@
     <!-- Card content -->
     <DataTemplate DataType="{x:Type vm:TrainerCardViewModel}">
         <Grid>
-            <Border x:Name="Mask" CornerRadius="14" Background="White" />
+            <Border x:Name="Mask" CornerRadius="8" Background="White" />
             <Grid>
                 <Grid.OpacityMask>
                     <VisualBrush Visual="{Binding ElementName=Mask}" />
@@ -103,22 +112,23 @@
                 </StackPanel>
 
                 <!-- Badges -->
-                <Border Background="{StaticResource BadgeBrush}" CornerRadius="8" Padding="8,3" Margin="10"
+                <Border Background="{StaticResource BadgeBrush}" CornerRadius="4" Padding="7,2,7,3" Margin="8"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding HasOptions, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="{Binding OptionsBadge}" Style="{StaticResource TextBase}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OnImageTextBrush}" />
                 </Border>
-                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10">
-                    <Border Background="{StaticResource BadgeBrush}" CornerRadius="8" Padding="6,4" HorizontalAlignment="Left"
+                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
+                    <Border Background="{StaticResource BadgeBrush}" CornerRadius="4" Padding="5,4" HorizontalAlignment="Left"
                             Visibility="{Binding IsFavourite, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphStarFill}" FontSize="14" Foreground="{DynamicResource FavouriteBrush}" />
                     </Border>
-                    <Border Background="{DynamicResource RunningBrush}" CornerRadius="8" Padding="8,3" Margin="0,6,0,0" HorizontalAlignment="Left"
+                    <Border Background="{DynamicResource RunningBrush}" CornerRadius="4" Padding="7,2,7,3" Margin="0,6,0,0" HorizontalAlignment="Left"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="12" FontWeight="Bold" Foreground="#05210F" />
                     </Border>
                 </StackPanel>
             </Grid>
+            <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" IsHitTestVisible="False" />
         </Grid>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding HasCover}" Value="True">

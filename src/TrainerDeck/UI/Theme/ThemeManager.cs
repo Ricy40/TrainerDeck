@@ -134,6 +134,19 @@ public sealed class ThemeManager
         Pair("AccentTextFillColorPrimary", ToColor(t.AccentText));
         Pair("TextOnAccentFillColorPrimary", ToColor(t.TextOnAccent));
 
+        bool dark = t.IsDark;
+        Pair("ControlFillColorTertiary", Hex(dark ? "#08FFFFFF" : "#4DF9F9F9"));
+        Pair("ControlFillColorInputActive", Hex(dark ? "#B31E1E1E" : "#FFFFFFFF"));
+        Pair("ControlStrongStrokeColorDefault", Hex(dark ? "#8BFFFFFF" : "#72000000"));
+        Pair("ControlStrokeColorSecondary", Hex(dark ? "#18FFFFFF" : "#29000000"));
+        Pair("LayerFillColorDefault", t.Neutrals == NeutralSet.BrandDark ? n.Surface : Hex(dark ? "#4C3A3A3A" : "#80FFFFFF"));
+        Pair("SubtleFillColorTransparent", Colors.Transparent);
+
+        Pair("FocusStrokeColorOuter", t.Neutrals == NeutralSet.BrandDark ? ToColor(t.AccentFill) : n.Text);
+        Pair("FocusStrokeColorInner", Hex(dark ? "#B3000000" : "#B3FFFFFF"));
+        d["ShadowOpacity"] = dark ? 0.45 : 0.16;
+        d["ShadowOpacityHigh"] = dark ? 0.6 : 0.26;
+
         var merged = Application.Current.Resources.MergedDictionaries;
         if (_resources is not null)
         {

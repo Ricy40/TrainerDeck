@@ -17,83 +17,92 @@
         </Grid.RowDefinitions>
 
         <!-- Top bar -->
-        <Grid Margin="40,26,40,6">
+        <Grid Margin="40,22,40,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Image Source="/Assets/Logo.png" Width="36" Height="36" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality" />
+                <Image Source="/Assets/Logo.png" Width="32" Height="32" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality" />
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Trainer Deck" Style="{StaticResource TextTitle}" FontSize="22" />
+                    <TextBlock Text="Trainer Deck" Style="{StaticResource TextTitle}" FontSize="20" />
                     <TextBlock Style="{StaticResource TextSecondary}" FontSize="13">
                         <Run Text="{Binding Summary, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding SortLabel, Mode=OneWay}" />
                     </TextBlock>
                 </StackPanel>
             </StackPanel>
 
-            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="25" Padding="4" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton Style="{StaticResource PillTab}" GroupName="LibraryTabs" Content="All"
-                                 IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.All}}" />
-                    <RadioButton Style="{StaticResource PillTab}" GroupName="LibraryTabs" Content="Favourites"
-                                 IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Favourites}}" />
-                    <RadioButton Style="{StaticResource PillTab}" GroupName="LibraryTabs" Content="Recent"
-                                 IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Recent}}" />
-                </StackPanel>
-            </Border>
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="-12,10,0,0">
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="All"
+                             IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.All}}" />
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Favourites"
+                             IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Favourites}}" />
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Recent"
+                             IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Recent}}" />
+            </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <Button Style="{StaticResource AccentButton}" Margin="0,0,10,0" Command="{Binding OpenZipsCommand}" Focusable="False"
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Style="{StaticResource AccentButton}" Margin="0,0,8,0" Command="{Binding OpenZipsCommand}" Focusable="False"
                         ToolTip="{Binding PendingZipsLabel}" Visibility="{Binding HasPendingZips, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource Glyph}" Text="&#xF012;" FontSize="15" Foreground="{DynamicResource TextOnAccentBrush}" />
                         <TextBlock Text="{Binding PendingZipCount}" VerticalAlignment="Center" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
-                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="180" Tag="Type to search"
+                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="220" Tag="Search trainers"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding CycleSortCommand}" ToolTip="Change sort order (Ctrl+S)" Focusable="False">
-                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSort}" FontSize="16" />
-                </Button>
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding RescanCommand}" ToolTip="Rescan (F5)" Focusable="False">
-                    <TextBlock x:Name="RefreshGlyph" Text="{StaticResource GlyphRefresh}" FontSize="16"
-                               RenderTransformOrigin="0.5,0.5">
-                        <TextBlock.RenderTransform>
-                            <RotateTransform />
-                        </TextBlock.RenderTransform>
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource Glyph}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsScanning}" Value="True">
-                                        <DataTrigger.EnterActions>
-                                            <BeginStoryboard x:Name="Spin">
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle" From="0" To="360"
-                                                                     Duration="0:0:0.9" RepeatBehavior="Forever" />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                        <DataTrigger.ExitActions>
-                                            <StopStoryboard BeginStoryboardName="Spin" />
-                                        </DataTrigger.ExitActions>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </Button>
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding AddTrainerCommand}" ToolTip="Add a trainer (from Downloads)" Focusable="False">
-                    <TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="16" />
-                </Button>
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding OpenFolderCommand}" ToolTip="Open trainer folder" Focusable="False">
-                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphFolder}" FontSize="16" />
-                </Button>
-                <Button Style="{StaticResource FlatButton}" Margin="10,0,0,0" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
-                    <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
-                </Button>
+
+                <!-- Command bar -->
+                <Border Margin="8,0,0,0" Padding="1" CornerRadius="8" Height="40" Background="{DynamicResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding CycleSortCommand}" ToolTip="Change sort order (Ctrl+S)" Focusable="False">
+                            <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSort}" FontSize="16" />
+                        </Button>
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding RescanCommand}" ToolTip="Rescan (F5)" Focusable="False">
+                            <TextBlock x:Name="RefreshGlyph" Text="{StaticResource GlyphRefresh}" FontSize="16"
+                                       RenderTransformOrigin="0.5,0.5">
+                                <TextBlock.RenderTransform>
+                                    <RotateTransform />
+                                </TextBlock.RenderTransform>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Glyph}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard x:Name="Spin">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle" From="0" To="360"
+                                                                             Duration="0:0:0.9" RepeatBehavior="Forever" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <StopStoryboard BeginStoryboardName="Spin" />
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Button>
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding AddTrainerCommand}" ToolTip="Add a trainer (from Downloads)" Focusable="False">
+                            <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphAdd}" FontSize="16" />
+                        </Button>
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenFolderCommand}" ToolTip="Open trainer folder" Focusable="False">
+                            <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphFolder}" FontSize="16" />
+                        </Button>
+                        <Rectangle Width="1" Margin="4,9" Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
+                            <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
+                        </Button>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Grid>
 
@@ -110,7 +119,7 @@
                     <!-- Spacing lives inside the scrolled content so the scaled focus ring is never clipped. -->
                     <ScrollViewer x:Name="Scroller" Focusable="False"
                                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" CanContentScroll="False">
-                        <ItemsPresenter Margin="40,18,40,36" />
+                        <ItemsPresenter Margin="40,14,40,36" />
                     </ScrollViewer>
                 </ControlTemplate>
             </ListBox.Template>
@@ -131,7 +140,7 @@
                         Visibility="{Binding ShowOpenFolder, Converter={StaticResource BoolToVisibility}}">
                 <Button Style="{StaticResource AccentButton}" Command="{Binding AddTrainerCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource Glyph}" Text="&#xE710;" FontSize="15" Margin="0,0,8,0" Foreground="{DynamicResource TextOnAccentBrush}" />
+                        <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphAdd}" FontSize="15" Margin="0,0,8,0" Foreground="{DynamicResource TextOnAccentBrush}" />
                         <TextBlock Text="Add a trainer" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -169,18 +178,21 @@
                 </Style>
             </Grid.Style>
             <Rectangle Fill="{DynamicResource ScrimBrush}" />
-            <Border Width="168" Height="168" CornerRadius="32" Background="{DynamicResource SurfaceHighBrush}"
-                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding RailLetter}" Style="{StaticResource TextTitle}" FontSize="96"
+            <Border Width="160" Height="160" CornerRadius="8" Background="{DynamicResource SurfaceHighBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="12" Direction="270" Opacity="{DynamicResource ShadowOpacityHigh}" />
+                </Border.Effect>
+                <TextBlock Text="{Binding RailLetter}" Style="{StaticResource TextTitle}" FontSize="92" Foreground="{DynamicResource AccentTextBrush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-8,0,0" />
             </Border>
             <Border HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,24,0" Padding="6,10"
-                    Background="{DynamicResource SurfaceBrush}" CornerRadius="22">
+                    Background="{DynamicResource SurfaceHighBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
                 <ItemsControl ItemsSource="{Binding RailLetters}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:RailLetterViewModel}">
                             <Grid Width="32" Height="{Binding ActualHeight, ElementName=Rail, Converter={StaticResource RailItemHeight}}">
-                                <Ellipse x:Name="Dot" Width="28" Height="28" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                                <Border x:Name="Dot" Width="28" Height="28" CornerRadius="4" Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
                                 <TextBlock x:Name="Letter" Text="{Binding Text}" Style="{StaticResource TextBase}" FontSize="14" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}" Opacity="0.5" />
                             </Grid>

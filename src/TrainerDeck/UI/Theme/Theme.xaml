@@ -31,6 +31,12 @@
     <sys:String x:Key="GlyphPlay">&#xE768;</sys:String>
     <sys:String x:Key="GlyphClear">&#xE711;</sys:String>
 
+    <sys:String x:Key="GlyphAdd">&#xE710;</sys:String>
+
+    <!-- Fluent motion: decelerate for things arriving, accelerate for things leaving -->
+    <QuinticEase x:Key="FluentDecelerate" EasingMode="EaseOut" />
+    <CubicEase x:Key="FluentAccelerate" EasingMode="EaseIn" />
+
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <ui:NullToVisibilityConverter x:Key="NullToVisibility" />
     <ui:NullToVisibilityConverter x:Key="NullToVisibilityInverse" Invert="True" />

@@ -25,7 +25,7 @@
         <controls:ToastView />
 
         <!-- Footer: context button hints -->
-        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
+        <Border Grid.Row="1" Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
                 Height="56" Padding="40,0">
             <Grid>
                 <Grid.ColumnDefinitions>
