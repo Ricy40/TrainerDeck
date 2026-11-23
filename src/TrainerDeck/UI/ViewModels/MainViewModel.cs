@@ -298,7 +298,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (LastDevice == InputSource.Controller)
             {
                 ButtonGlyph g = ControllerGlyphs.For(hint.Action, LastControllerKind, ControllerMapping.Default);
-                Hints.Add(new HintViewModel(g.Text, hint.ControllerLabel ?? hint.Label, g.Round, Frozen(g.Color == ControllerGlyphs.Neutral ? KeyCapText : g.Color)));
+                Hints.Add(new HintViewModel(g.Text, hint.ControllerLabel ?? hint.Label, g.Round, Frozen(g.Color == ControllerGlyphs.Neutral ? KeyCapText : Readable(g.Color))));
             }
             else
             {
@@ -311,6 +311,17 @@ public sealed partial class MainViewModel : ObservableObject
         System.Windows.Application.Current?.TryFindResource("TextPrimaryColor") is System.Windows.Media.Color c
             ? c
             : System.Windows.Media.Color.FromRgb(0xF3, 0xF5, 0xF9);
+
+    private static System.Windows.Media.Color Readable(System.Windows.Media.Color c)
+    {
+        if (System.Windows.Application.Current?.TryFindResource("BackgroundColor") is not System.Windows.Media.Color bg)
+        {
+            return c;
+        }
+
+        var r = TrainerDeck.Core.Theming.ThemeResolver.EnsureContrast(new(c.R, c.G, c.B), new(bg.R, bg.G, bg.B), 3.0);
+        return System.Windows.Media.Color.FromRgb(r.R, r.G, r.B);
+    }
 
     private static System.Windows.Media.Brush Frozen(System.Windows.Media.Color c)
     {

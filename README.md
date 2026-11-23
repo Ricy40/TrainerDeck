@@ -9,7 +9,13 @@ A full-screen, controller-friendly launcher for FLiNG game trainers. It's made f
 - Navigates fully with a controller (Xbox, the Ally's built-in pad, PlayStation and other DirectInput pads) or with keyboard and mouse.
 - Ignores the controller unless Trainer Deck is the window in front, so buttons you press in a game never trigger anything here.
 - Shows game cover art: from games installed through Steam (read locally, nothing downloaded), or captured from the trainer's own window the first time it runs. Downloading Steam art for other games is opt-in.
+- Looks at home on Windows 11: Fluent controls, Mica, light and dark themes, and your accent colour if you want it.
 - Portable: settings and caches live next to the exe.
+
+| Library | Light theme |
+| --- | --- |
+| ![Library in the Trainer Deck look](docs/screenshots/library.png) | ![Library in the light theme](docs/screenshots/library-light.png) |
+| ![Appearance settings](docs/screenshots/settings-appearance.png) | ![Accent colour picker](docs/screenshots/accent-picker.png) |
 
 ## Getting started
 
@@ -141,6 +147,15 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 
 **After launching a trainer** can also be set to **Hide to tray**.
 
+## Appearance
+
+**Settings › Appearance › Colours** picks the look:
+- **Trainer Deck** (default): the original dark theme in Trainer Deck blue.
+- **Match Windows:** follows Windows' light or dark mode and your accent colour, and changes as soon as you change them in Windows.
+- **Custom:** choose **Dark**, **Light** or **Follow Windows**, and an **Accent colour** from the same 48 colours as Windows (move with the d-pad, A to choose) or any hex code (Y, then type it).
+
+Accent colours are adjusted where needed so text and switches stay readable. In a normal window, Match Windows and Custom use the Windows 11 Mica background (Windows 11 22H2 or later); full screen keeps a solid background.
+
 ## Steam
 
 - **Use games installed with Steam** (on by default): Trainer Deck reads your Steam folder to find installed games. A trainer whose name matches an installed game gets that game's library art and a **Play** button on its details page. Nothing is downloaded.
@@ -163,7 +178,7 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 
 ## Building
 
-Requires the **.NET 8 SDK** on Windows.
+Requires the **.NET 10 SDK** on Windows.
 
 ```powershell
 dotnet build
@@ -198,6 +213,7 @@ src/TrainerDeck.Core     no WPF; unit-tested
   Cheats/    hotkey parser, cheat model, older-trainer layout reader
   Install/   install layout, Task Scheduler definition, uninstall entry
   Art/       .ico writer (packs art/Icon PNGs into the app icon)
+  Theming/   colours, Windows accent palettes, theme resolution and contrast checks
   Steam/     VDF parser, Steam library/manifests, name matching
   Settings/  settings.json, portable paths
 src/TrainerDeck          WPF app (MVVM, CommunityToolkit.Mvvm)
@@ -207,7 +223,7 @@ src/TrainerDeck          WPF app (MVVM, CommunityToolkit.Mvvm)
   Install/   setup window, installer/uninstaller, shortcuts
   Steam/     Steam location, art cache and downloads, game launching
   Art/       icon extraction, cover/hero loading, colour tools
-  UI/        theme, views, view models, controls
+  UI/        theme (ThemeManager, Fluent styles), views, view models, controls
 tests/TrainerDeck.Tests  xUnit
 ```
 

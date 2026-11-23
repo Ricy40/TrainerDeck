@@ -15,7 +15,7 @@ public sealed partial class AccentSwatch : ObservableObject
         var brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(color.R, color.G, color.B));
         brush.Freeze();
         Brush = brush;
-        CheckBrush = Rgb.Contrast(color, new Rgb(0, 0, 0)) >= Rgb.Contrast(color, new Rgb(255, 255, 255)) ? Brushes.Black : Brushes.White;
+        CheckBrush = Rgb.Contrast(color, new Rgb(255, 255, 255)) >= 3.0 ? Brushes.White : Brushes.Black;
     }
 
     public Rgb Color { get; }

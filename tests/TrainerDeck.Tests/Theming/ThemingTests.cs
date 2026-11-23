@@ -95,6 +95,25 @@ public class AccentPaletteTests
 
 public class ThemeResolverTests
 {
+    [Theory]
+    [InlineData("#F5C21B", "#F3F3F3")]
+    [InlineData("#6CCB2E", "#F3F3F3")]
+    [InlineData("#3E9BF2", "#202020")]
+    [InlineData("#1B1B1B", "#0D0F13")]
+    public void EnsureContrast_reaches_the_minimum(string color, string background)
+    {
+        Rgb bg = Rgb.Parse(background);
+        Rgb result = ThemeResolver.EnsureContrast(Rgb.Parse(color), bg, 3.0);
+        Assert.True(Rgb.Contrast(result, bg) >= 3.0, $"{result} on {bg}");
+    }
+
+    [Fact]
+    public void EnsureContrast_leaves_readable_colours_alone()
+    {
+        Rgb green = Rgb.Parse("#6CCB2E");
+        Assert.Equal(green, ThemeResolver.EnsureContrast(green, ThemeResolver.BrandBackground, 3.0));
+    }
+
     [Fact]
     public void Default_is_the_brand_look_whatever_windows_uses()
     {

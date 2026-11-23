@@ -69,6 +69,18 @@ public static class ThemeResolver
         return Build(neutrals, palette);
     }
 
+    public static Rgb EnsureContrast(Rgb color, Rgb background, double minimum)
+    {
+        Rgb toward = background.Luminance > 0.5 ? new Rgb(0, 0, 0) : new Rgb(255, 255, 255);
+        Rgb result = color;
+        for (int step = 1; step <= 10 && Rgb.Contrast(result, background) < minimum; step++)
+        {
+            result = color.Mix(toward, step / 10.0);
+        }
+
+        return result;
+    }
+
     public static ResolvedTheme Build(NeutralSet neutrals, AccentPalette palette)
     {
         Rgb background = neutrals switch

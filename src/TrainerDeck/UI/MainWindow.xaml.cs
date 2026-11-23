@@ -69,12 +69,11 @@ public partial class MainWindow : Window
 
     private void AnimatePageIn()
     {
-        var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
-        var duration = TimeSpan.FromMilliseconds(200);
-        PageHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, duration));
+        var ease = new System.Windows.Media.Animation.QuinticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+        PageHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(167)));
         if (PageHost.RenderTransform is TranslateTransform t)
         {
-            t.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(14, 0, duration) { EasingFunction = ease });
+            t.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(28, 0, TimeSpan.FromMilliseconds(300)) { EasingFunction = ease });
         }
     }
 
