@@ -27,6 +27,11 @@ public partial class SetupWindow : Window
         InstallButton.Content = isUpdate ? "Update" : "Install";
         BrowseButton.IsEnabled = !isUpdate;
         Logo.Source = IconExtractorSafe();
+        if (!WidgetInstaller.Available)
+        {
+            WidgetCheck.IsChecked = false;
+            WidgetCheck.Visibility = Visibility.Collapsed;
+        }
         UI.Theme.ThemeManager.Instance?.Attach(this);
     }
 
@@ -59,19 +64,22 @@ public partial class SetupWindow : Window
             return;
         }
 
-        var options = new InstallOptions(_target, TaskCheck.IsChecked == true, DesktopCheck.IsChecked == true, _userSid, _systemIntegration);
+        var options = new InstallOptions(_target, TaskCheck.IsChecked == true, DesktopCheck.IsChecked == true, _userSid, _systemIntegration,
+            WidgetCheck.IsChecked == true);
         OptionsPanel.Visibility = Visibility.Collapsed;
         ProgressPanel.Visibility = Visibility.Visible;
         InstallButton.IsEnabled = false;
         CancelButton.IsEnabled = false;
         try
         {
-            await Task.Run(() => Installer.Install(options, text => Dispatcher.BeginInvoke(() => ProgressText.Text = text)));
+            string? note = await Task.Run(() => Installer.Install(options, text => Dispatcher.BeginInvoke(() => ProgressText.Text = text)));
             _done = true;
             Bar.IsIndeterminate = false;
             Bar.Value = 100;
             Heading.Text = "Trainer Deck is installed";
-            ProgressText.Text = $"Installed to {_target}.\n\nFind it in the Start menu. To add it to the Xbox app: My Library › + › browse to {Path.Combine(_target, InstallLayout.ExeName)}.";
+            ProgressText.Text = $"Installed to {_target}.\n\nFind it in the Start menu. To add it to the Xbox app: My Library › + › browse to {Path.Combine(_target, InstallLayout.ExeName)}."
+                + (options.GameBarWidget && note is null && WidgetInstaller.Available ? "\n\nThe Trainer Deck widget is in Game Bar's widget menu." : "")
+                + (note is null ? "" : "\n\n" + note);
             InstallButton.Content = "Launch Trainer Deck";
             CancelButton.Content = "Close";
             InstallButton.IsEnabled = true;

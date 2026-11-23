@@ -32,6 +32,7 @@ public partial class App : Application
     private SingleInstance? _instance;
     private TrayIcon? _tray;
     private OverlayController? _overlay;
+    private Widget.WidgetPipeServer? _widgetPipe;
     private bool _exiting;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -198,6 +199,9 @@ public partial class App : Application
         overlay.Attach();
         main.OpenOverlay = overlay.Open;
         main.SuspendOverlayHotkey = overlay.SuspendHotkey;
+        var widgetBridge = new Widget.WidgetBridge(main, () => ShowMainWindow(window));
+        _widgetPipe = new Widget.WidgetPipeServer(request => Dispatcher.InvokeAsync(() => widgetBridge.Handle(request)).Task);
+        _widgetPipe.Start();
         cheats.ShortcutStateChanged += (_, _) => _controllers?.Wake();
         _launcher.Running.Changed += (_, _) => _controllers?.Wake();
         settings.Changed += (_, _) => _controllers?.Wake();
@@ -244,6 +248,7 @@ public partial class App : Application
     {
         _tray?.Dispose();
         _overlay?.Dispose();
+        _widgetPipe?.Dispose();
         _controllers?.Dispose();
         _launcher?.Dispose();
         _library?.Dispose();

@@ -1,0 +1,9 @@
+<Application
+    x:Class="TrainerDeck.Widget.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- WinUI 2: Windows 11 control styles and the Fluent colour and text resources the pages use -->
+    <Application.Resources>
+        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+    </Application.Resources>
+</Application>

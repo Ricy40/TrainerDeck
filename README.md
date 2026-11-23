@@ -130,7 +130,11 @@ The overlay is a panel over your game with the running trainer's cheats. Navigat
 
 ### Xbox Game Bar widget
 
-Not built yet. A Game Bar widget has to be a separate UWP app, built with Visual Studio 2022 and its UWP tools. The overlay covers the same controls in the meantime.
+The installer can add a **Trainer Deck** widget to Xbox Game Bar (tick **Xbox Game Bar widget** in setup). Press the Xbox button (or **Win + G**), open the widget menu and choose **Trainer Deck**. It shows the running trainer's cheats: **A** toggles or applies one, **d-pad left/right** steps a value. Pin it to keep the list on screen while you play.
+
+The widget is a remote for Trainer Deck, so Trainer Deck has to be running (in a window or in the tray). If it isn't, the widget offers **Open Trainer Deck**.
+
+The widget is signed with Trainer Deck's own certificate rather than a paid one, so setup adds that certificate to the PC's **Trusted People** store; that trusts packages signed with this one certificate and nothing else. Uninstalling Trainer Deck removes the widget and the certificate.
 
 ### In-game controller shortcuts
 
@@ -178,7 +182,7 @@ Accent colours are adjusted where needed so text and switches stay readable. In 
 
 ## Building
 
-Requires the **.NET 10 SDK** on Windows.
+Requires the **.NET 10 SDK** on Windows. The Game Bar widget also needs **Visual Studio 2022 or later** (Community is fine) with the **Universal Windows Platform development** workload; without it `build.ps1` builds everything else and leaves the widget out of the installer.
 
 ```powershell
 dotnet build
@@ -194,6 +198,8 @@ dotnet test
 This creates two files in `publish\`:
 - `TrainerDeck.exe`: the portable app.
 - `TrainerDeck-Setup.exe`: the installer.
+
+If Visual Studio's UWP tools are installed, `build.ps1` also builds the Game Bar widget, signs it and embeds it in both exes. The first run creates a self-signed **CN=Trainer Deck** signing certificate in `.signing\` (ignored by git). Keep a backup of that folder: widget updates must be signed with the same certificate, and a new one means setup has to replace the trust on each PC.
 
 Both are the same self-contained program (about 70 MB; users don't need .NET installed). A copy whose name contains "Setup", or one started with `--install`, runs the installer instead of the app.
 
@@ -213,6 +219,7 @@ src/TrainerDeck.Core     no WPF; unit-tested
   Cheats/    hotkey parser, cheat model, older-trainer layout reader
   Install/   install layout, Task Scheduler definition, uninstall entry
   Art/       .ico writer (packs art/Icon PNGs into the app icon)
+  Widget/    Game Bar widget protocol and package identity
   Theming/   colours, Windows accent palettes, theme resolution and contrast checks
   Steam/     VDF parser, Steam library/manifests, name matching
   Settings/  settings.json, portable paths
@@ -220,10 +227,12 @@ src/TrainerDeck          WPF app (MVVM, CommunityToolkit.Mvvm)
   Input/     XInput + raw HID polling, foreground check
   Launch/    ShellExecuteEx runas, process tracking, single instance
   Cheats/    UI Automation sessions with trainers, hotkey sending, cover capture
-  Install/   setup window, installer/uninstaller, shortcuts
+  Install/   setup window, installer/uninstaller, shortcuts, Game Bar widget install
+  Widget/    named pipe server and bridge for the Game Bar widget
   Steam/     Steam location, art cache and downloads, game launching
   Art/       icon extraction, cover/hero loading, colour tools
   UI/        theme (ThemeManager, Fluent styles), views, view models, controls
+src/TrainerDeck.Widget   Xbox Game Bar widget (UWP; build with Visual Studio or build.ps1)
 tests/TrainerDeck.Tests  xUnit
 ```
 

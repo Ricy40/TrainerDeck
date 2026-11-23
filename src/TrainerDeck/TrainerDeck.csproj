@@ -32,4 +32,10 @@
   <ItemGroup>
     <ProjectReference Include="..\TrainerDeck.Core\TrainerDeck.Core.csproj" />
   </ItemGroup>
+  <!-- build.ps1 passes WidgetPackageDir when it has built the Game Bar widget; the installer extracts these. -->
+  <ItemGroup Condition="'$(WidgetPackageDir)' != ''">
+    <EmbeddedResource Include="$(WidgetPackageDir)\*.msix;$(WidgetPackageDir)\*.appx;$(WidgetPackageDir)\*.cer">
+      <LogicalName>Widget/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

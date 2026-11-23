@@ -9,3 +9,6 @@ TestResults/
 
 # Photoshop files are over GitHub's 100 MB file limit.
 art/Photoshop/
+
+# Widget signing certificate and its password (private key: never commit).
+.signing/

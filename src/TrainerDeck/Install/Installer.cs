@@ -15,7 +15,8 @@ public sealed record InstallOptions(
     bool ElevatedTask,
     bool DesktopShortcut,
     string UserSid,
-    bool SystemIntegration = true);
+    bool SystemIntegration = true,
+    bool GameBarWidget = false);
 
 
 public static class Installer
@@ -40,7 +41,8 @@ public static class Installer
         return id.User?.Value ?? "";
     }
 
-    public static void Install(InstallOptions o, Action<string> progress)
+    // Returns a note for the user when an optional part (the Game Bar widget) couldn't be installed.
+    public static string? Install(InstallOptions o, Action<string> progress)
     {
         string source = Environment.ProcessPath ?? throw new InvalidOperationException("Can't find the setup file.");
         string target = Path.GetFullPath(o.TargetDirectory);
@@ -59,7 +61,7 @@ public static class Installer
 
         if (!o.SystemIntegration)
         {
-            return;
+            return null;
         }
 
         progress("Adding shortcuts…");
@@ -83,6 +85,8 @@ public static class Installer
             }
         }
 
+        WidgetInstaller.RegisterProtocol(exe);
+
         if (o.ElevatedTask)
         {
             progress("Setting up start without a UAC prompt…");
@@ -93,7 +97,27 @@ public static class Installer
             DeleteTask();
         }
 
+        string? note = null;
+        if (o.GameBarWidget && WidgetInstaller.Available)
+        {
+            progress("Installing the Xbox Game Bar widget…");
+            try
+            {
+                WidgetInstaller.Install(o.UserSid);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Game Bar widget install failed", ex);
+                note = "The Xbox Game Bar widget couldn't be installed: " + ex.Message;
+            }
+        }
+        else if (!o.GameBarWidget && WidgetInstaller.Available)
+        {
+            WidgetInstaller.Uninstall();
+        }
+
         Log.Info("Install finished.");
+        return note;
     }
 
     public static void Uninstall(string target, bool keepTrainers)
@@ -106,6 +130,8 @@ public static class Installer
         TryDelete(StartMenuShortcut);
         TryDelete(DesktopShortcut);
         TryDelete(Path.Combine(target, PortablePaths.InstallMarkerFile));
+        WidgetInstaller.UnregisterProtocol();
+        WidgetInstaller.Uninstall();
 
         string tail = keepTrainers
             ? $"del /f /q \"{exe}\" & rmdir \"{target}\""

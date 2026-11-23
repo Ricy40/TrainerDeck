@@ -119,6 +119,13 @@
                 </StackPanel>
             </CheckBox>
             <CheckBox x:Name="DesktopCheck" Style="{StaticResource SetupCheck}" Content="Desktop shortcut" />
+            <CheckBox x:Name="WidgetCheck" Style="{StaticResource SetupCheck}" IsChecked="True">
+                <StackPanel>
+                    <TextBlock Text="Xbox Game Bar widget" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"
+                               Text="Control your trainer's cheats from Game Bar (Xbox button or Win + G). Adds the widget's signing certificate to this PC's trusted people." />
+                </StackPanel>
+            </CheckBox>
             <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
                        Text="Your trainers go in the Trainers folder inside the install location. Use “Add a trainer” in the app to copy them there." />
         </StackPanel>
