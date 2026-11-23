@@ -161,19 +161,6 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 2. Choose **Add game / Scan** (wording varies by version) and browse to `TrainerDeck.exe`.
 3. To give it a cover, use the artwork in [`art/`](art) (see **Artwork** below).
 
-### Artwork
-
-| File | Size | Use it for |
-|---|---|---|
-| `Cover-600x900.png` (also `-720x1080`, `-1440x2160`) | 2:3 | Portrait cover / box art in Armoury Crate, Steam (non-Steam shortcut), Playnite |
-| `Hero-1920x1080.png` (also `-3840x2160`) | 16:9 | Wide hero or background art. It has no text, because launchers put the name on top. |
-| `Tile-300.png` (also `-1080`, `-2160`) | 1:1 | Square tiles and icons in launchers |
-| `Icon/Icon-512.png` | 1:1 | A large transparent icon, where a launcher asks for a logo |
-| `Banner-2560x1280.png` | 2:1 | The banner at the top of this README |
-| `Social_Preview-1280x640.png` | 2:1 | GitHub's link preview (repo **Settings › General › Social preview**) |
-
-The art follows Windows 11's design guidance: Fluent colours and depth, Segoe UI Variable type, and no text on the hero. The Photoshop and Illustrator sources are in `art/Photoshop` and `art/Illustrator`. The Photoshop files are too big for GitHub, so they're kept local only.
-
 ## Building
 
 Requires the **.NET 8 SDK** on Windows.
