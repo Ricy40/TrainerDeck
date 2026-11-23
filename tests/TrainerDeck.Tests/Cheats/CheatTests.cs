@@ -192,3 +192,22 @@ public class ChordDetectorTests
         Assert.Equal([GamepadButtons.Y], c.Update(GamepadButtons.LeftShoulder | GamepadButtons.RightShoulder | GamepadButtons.Y));
     }
 }
+
+public class HotkeyRecordingTests
+{
+    [Theory]
+    [InlineData(0x7B, HotkeyModifiers.Ctrl | HotkeyModifiers.Shift, "Ctrl+Shift+F12")]
+    [InlineData(0x61, HotkeyModifiers.Alt, "Alt+Num 1")]
+    [InlineData('O', HotkeyModifiers.Ctrl, "Ctrl+O")]
+    [InlineData(0x24, HotkeyModifiers.None, "Home")]
+    [InlineData(0x6A, HotkeyModifiers.None, "Num *")]
+    public void Names_recorded_keys_so_they_parse_back(int vk, HotkeyModifiers mods, string expected)
+    {
+        Hotkey h = Hotkey.FromVirtualKey(vk, mods)!;
+        Assert.Equal(expected, h.ToString());
+        Assert.Equal(h, Hotkey.Parse(h.ToString()));
+    }
+
+    [Fact]
+    public void Unknown_keys_are_rejected() => Assert.Null(Hotkey.FromVirtualKey(0xFF, HotkeyModifiers.None));
+}

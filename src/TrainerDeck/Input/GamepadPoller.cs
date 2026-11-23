@@ -13,9 +13,8 @@ public sealed class GamepadPoller : IDisposable
     private readonly IReadOnlyList<IGamepadSource> _sources;
     private readonly Func<bool> _isActive;
     private readonly Action<InputAction, ControllerKind> _onAction;
-    private readonly Func<GamepadButtons> _chordModifier;
-    private readonly Action<GamepadButtons> _onChord;
-    private readonly ChordDetector _chords = new(GamepadButtons.None);
+    private readonly Func<bool> _backgroundWanted;
+    private readonly Action<GamepadButtons> _onBackground;
     private readonly FocusGate _gate = new();
     private readonly StickDigitizer _digitizer = new();
     private readonly InputRouter _router;
@@ -24,13 +23,13 @@ public sealed class GamepadPoller : IDisposable
     private Task? _loop;
 
     public GamepadPoller(IReadOnlyList<IGamepadSource> sources, ControllerMapping mapping, Func<bool> isActive, Action<InputAction, ControllerKind> onAction,
-        Func<GamepadButtons>? chordModifier = null, Action<GamepadButtons>? onChord = null)
+        Func<bool>? backgroundWanted = null, Action<GamepadButtons>? onBackground = null)
     {
         _sources = sources;
         _isActive = isActive;
         _onAction = onAction;
-        _chordModifier = chordModifier ?? (() => GamepadButtons.None);
-        _onChord = onChord ?? (_ => { });
+        _backgroundWanted = backgroundWanted ?? (() => false);
+        _onBackground = onBackground ?? (_ => { });
         _router = new InputRouter(mapping);
     }
 
@@ -61,13 +60,12 @@ public sealed class GamepadPoller : IDisposable
             {
                 TimeSpan now = clock.Elapsed;
                 bool active = _isActive();
-                GamepadButtons modifier = active ? GamepadButtons.None : _chordModifier();
-                Mode wanted = active ? Mode.Foreground : modifier != GamepadButtons.None ? Mode.Shortcuts : Mode.Paused;
+                Mode wanted = active ? Mode.Foreground : _backgroundWanted() ? Mode.Shortcuts : Mode.Paused;
                 if (wanted != mode)
                 {
                     _router.Reset();
                     _digitizer.Reset();
-                    _chords.Reset();
+                    _onBackground(GamepadButtons.None);
                     if (wanted == Mode.Paused)
                     {
                         foreach (IGamepadSource s in _sources)
@@ -86,7 +84,7 @@ public sealed class GamepadPoller : IDisposable
                     Log.Info(wanted switch
                     {
                         Mode.Foreground => "Controller input resumed.",
-                        Mode.Shortcuts => "Controller input paused; listening for in-game cheat shortcuts only.",
+                        Mode.Shortcuts => "Controller input paused; listening only for the overlay combo and cheat shortcuts.",
                         _ => "Controller input paused (window not in foreground).",
                     });
                     mode = wanted;
@@ -128,11 +126,7 @@ public sealed class GamepadPoller : IDisposable
                 else
                 {
                     _gate.Filter(GamepadButtons.None, active: false, now);
-                    _chords.Modifier = modifier;
-                    foreach (GamepadButtons b in _chords.Update(buttons))
-                    {
-                        _onChord(b);
-                    }
+                    _onBackground(buttons);
                 }
 
                 await timer.WaitForNextTickAsync(ct).ConfigureAwait(false);

@@ -8,12 +8,15 @@ namespace TrainerDeck.UI.ViewModels;
 public sealed class FileBrowserViewModel : RowListPageViewModel
 {
     private readonly bool _folderMode;
+    private readonly IReadOnlyCollection<string>? _extensions;
     private readonly Action<string> _picked;
     private string? _current;
 
-    public FileBrowserViewModel(MainViewModel main, string title, string? start, bool folderMode, Action<string> picked) : base(main)
+    public FileBrowserViewModel(MainViewModel main, string title, string? start, bool folderMode, Action<string> picked,
+        IReadOnlyCollection<string>? extensions = null) : base(main)
     {
         _folderMode = folderMode;
+        _extensions = extensions;
         _picked = picked;
         Title = title;
         if (start is not null && Directory.Exists(start))
@@ -82,10 +85,11 @@ public sealed class FileBrowserViewModel : RowListPageViewModel
             dirs = Directory.EnumerateDirectories(path, "*", options).OrderBy(d => d, StringComparer.OrdinalIgnoreCase).ToList();
             if (!_folderMode)
             {
-                files = Directory.EnumerateFiles(path, "*", options)
-                    .Where(f => ArtService.ImageExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
-                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                IEnumerable<string> matching = Directory.EnumerateFiles(path, "*", options)
+                    .Where(f => (_extensions ?? ArtService.ImageExtensions).Contains(Path.GetExtension(f).ToLowerInvariant()));
+                files = _extensions is null
+                    ? matching.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToList()
+                    : matching.OrderByDescending(File.GetLastWriteTimeUtc).ToList();
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -103,19 +107,15 @@ public sealed class FileBrowserViewModel : RowListPageViewModel
         }
 
         rows.Add(new ActionRow("Up one level", Glyphs.Up, GoUp, "Open"));
-        foreach (string d in dirs)
-        {
-            rows.Add(FolderRow(Path.GetFileName(d), d, Glyphs.Folder));
-        }
-
-        foreach (string f in files)
-        {
-            rows.Add(new ActionRow(Path.GetFileName(f), Glyphs.Image, () => Pick(f), "Choose", FormatSize(f)));
-        }
+        var fileRows = files.Select(f => (RowViewModel)new ActionRow(Path.GetFileName(f),
+            _extensions is null ? Glyphs.Image : Path.GetExtension(f).Equals(".zip", StringComparison.OrdinalIgnoreCase) ? Glyphs.Zip : Glyphs.Game,
+            () => Pick(f), "Choose", FormatSize(f))).ToList();
+        var dirRows = dirs.Select(d => (RowViewModel)FolderRow(Path.GetFileName(d), d, Glyphs.Folder)).ToList();
+        rows.AddRange(_extensions is null ? dirRows.Concat(fileRows) : fileRows.Concat(dirRows));
 
         if (dirs.Count == 0 && files.Count == 0)
         {
-            rows.Add(new HeaderRow(_folderMode ? "No folders here" : "No images here"));
+            rows.Add(new HeaderRow(_folderMode ? "No folders here" : _extensions is null ? "No images here" : "No matching files here"));
         }
 
         SetRows(rows, select ?? (_folderMode ? "Use this folder" : null));

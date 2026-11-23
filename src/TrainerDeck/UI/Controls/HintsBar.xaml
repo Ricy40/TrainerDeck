@@ -1,0 +1,32 @@
+<UserControl x:Class="TrainerDeck.UI.Controls.HintsBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:TrainerDeck.UI.ViewModels"
+             HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
+    <ItemsControl ItemsSource="{Binding Hints}" HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:HintViewModel}">
+                <StackPanel Orientation="Horizontal" Margin="22,0,0,0">
+                    <Border x:Name="Cap" Style="{StaticResource KeyCap}">
+                        <TextBlock Text="{Binding Key}" Style="{StaticResource TextBase}" Foreground="{Binding KeyBrush}"
+                                   FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Round}" Value="True">
+                        <Setter TargetName="Cap" Property="CornerRadius" Value="14" />
+                        <Setter TargetName="Cap" Property="Width" Value="28" />
+                        <Setter TargetName="Cap" Property="Height" Value="28" />
+                        <Setter TargetName="Cap" Property="Padding" Value="0" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

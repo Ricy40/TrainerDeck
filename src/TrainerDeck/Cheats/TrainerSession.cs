@@ -104,13 +104,13 @@ public sealed partial class TrainerSession
 
         if (toggle.TryGetCurrentPattern(TogglePattern.Pattern, out object p))
         {
-            ((TogglePattern)p).Toggle();
+            ForegroundGuard.Keep(() => { ((TogglePattern)p).Toggle(); return true; });
             return true;
         }
 
         if (toggle.TryGetCurrentPattern(InvokePattern.Pattern, out object i))
         {
-            ((InvokePattern)i).Invoke();
+            ForegroundGuard.Keep(() => { ((InvokePattern)i).Invoke(); return true; });
             return true;
         }
 
@@ -130,7 +130,7 @@ public sealed partial class TrainerSession
             return false;
         }
 
-        vp.SetValue(value);
+        ForegroundGuard.Keep(() => { vp.SetValue(value); return true; });
         return true;
     });
 
@@ -181,7 +181,7 @@ public sealed partial class TrainerSession
         bool ok = false;
         if (item is not null && item.TryGetCurrentPattern(SelectionItemPattern.Pattern, out object sel))
         {
-            ((SelectionItemPattern)sel).Select();
+            ForegroundGuard.Keep(() => { ((SelectionItemPattern)sel).Select(); return true; });
             ok = true;
         }
 

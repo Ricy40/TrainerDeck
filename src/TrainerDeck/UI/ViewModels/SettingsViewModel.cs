@@ -9,7 +9,7 @@ namespace TrainerDeck.UI.ViewModels;
 
 public sealed class SettingsViewModel : RowListPageViewModel
 {
-    private static readonly string[] AfterLaunchOptions = ["Stay open", "Minimise", "Close Trainer Deck"];
+    private static readonly string[] AfterLaunchOptions = ["Stay open", "Minimise", "Close Trainer Deck", "Hide to tray"];
 
     private static readonly (string Label, string Value)[] ShortcutModifiers =
     [
@@ -49,9 +49,19 @@ public sealed class SettingsViewModel : RowListPageViewModel
     private void Rebuild()
     {
         var rows = new List<RowViewModel> { new HeaderRow("Administrator") };
-        rows.Add(new ToggleRow("Always run as administrator", Current.RunAsAdministrator, SetRunAsAdministrator,
-            (_s.IsElevated ? "Running as administrator now. " : "Not running as administrator right now. ")
-            + "Needed for the Cheats panel. Windows asks once each time Trainer Deck starts; trainers then launch without their own prompts."));
+        if (Install.InstallState.HasElevatedTask(_s.Paths))
+        {
+            rows.Add(new ActionRow("Starts as administrator automatically", Glyphs.Shield, () => { }, "OK",
+                (_s.IsElevated ? "Running as administrator now. " : "Not running as administrator right now. ")
+                + "Set up by the installer through Task Scheduler, so there's no UAC prompt. Uninstall or reinstall to change it."));
+        }
+        else
+        {
+            rows.Add(new ToggleRow("Always run as administrator", Current.RunAsAdministrator, SetRunAsAdministrator,
+                (_s.IsElevated ? "Running as administrator now. " : "Not running as administrator right now. ")
+                + "Needed for the Cheats panel. Windows asks once each time Trainer Deck starts; trainers then launch without their own prompts. "
+                + "Install Trainer Deck to skip that prompt."));
+        }
         if (!_s.IsElevated)
         {
             rows.Add(new ActionRow("Restart as administrator now", Glyphs.Shield, Main.RequestRestartElevated, "Restart",
@@ -69,6 +79,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
                 _s.Library.Roots.Count > 1 ? () => RemoveFolder(f) : null, "Remove"));
         }
 
+        rows.Add(new ActionRow("Add a trainer…", Glyphs.Download, Main.AddTrainer, "Choose", "Copies an .exe or .zip from Downloads (or anywhere) into your trainer folder"));
         rows.Add(new ActionRow("Add a trainer folder…", Glyphs.Add, AddFolder, "Add", "Scanned together with the folders above, including subfolders"));
         int zips = _s.Library.PendingZips.Count;
         if (zips > 0)
@@ -96,9 +107,31 @@ public sealed class SettingsViewModel : RowListPageViewModel
             i => _s.Settings.Update(s => s.CheatShortcutModifier = ShortcutModifiers[i].Value),
             "Hold this, then press the button assigned to a cheat"));
 
-        rows.Add(new HeaderRow("Display"));
+        rows.Add(new HeaderRow("Overlay"));
+        rows.Add(new ToggleRow("In-game overlay", Current.OverlayEnabled, v => Change(s => s.OverlayEnabled = v),
+            "A panel over your game with the running trainer's cheats, controlled with the pad"));
+        if (Current.OverlayEnabled)
+        {
+            bool hasHotkey = !string.IsNullOrWhiteSpace(Current.OverlayHotkey);
+            rows.Add(new ActionRow("Keyboard shortcut", Glyphs.Keyboard, RecordHotkey, "Change",
+                hasHotkey ? $"{Current.OverlayHotkey}  ·  works from any app. Tip: map an Ally back paddle to it." : "None",
+                hasHotkey ? () => Change(s => s.OverlayHotkey = "") : null, "Clear"));
+            int comboIndex = Array.FindIndex(OverlayCombos, c => string.Equals(c.Value, Current.OverlayControllerCombo, StringComparison.OrdinalIgnoreCase));
+            rows.Add(new ChoiceRow("Controller combo", OverlayCombos.Select(c => c.Label).ToArray(), Math.Max(0, comboIndex),
+                i => Change(s => s.OverlayControllerCombo = OverlayCombos[i].Value),
+                "Press these together while a trainer is running"));
+            if (Main.OpenOverlay is not null)
+            {
+                rows.Add(new ActionRow("Open the overlay now", Glyphs.View, Main.OpenOverlay, "Open", "Try it out"));
+            }
+        }
+
+        rows.Add(new HeaderRow("Window"));
         rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),
             "F11 switches at any time"));
+        rows.Add(new ChoiceRow("Close button", ["Exit Trainer Deck", "Keep running in the tray"], (int)Current.CloseButton,
+            i => _s.Settings.Update(s => s.CloseButton = (CloseButtonBehavior)i),
+            "In the tray, Trainer Deck keeps listening for the overlay and cheat shortcuts while a trainer runs"));
 
         rows.Add(new HeaderRow("Steam"));
         bool hasSteam = _s.Steam.SteamPath is not null;
@@ -115,6 +148,32 @@ public sealed class SettingsViewModel : RowListPageViewModel
 
         SetRows(rows);
         HintsChanged();
+    }
+
+    private static readonly (string Label, string Value)[] OverlayCombos =
+    [
+        ("Off", ""),
+        ("View + Menu", "Back|Start"),
+        ("L3 + R3 (both sticks)", "LeftThumb|RightThumb"),
+        ("LB + RB + View", "LeftShoulder|RightShoulder|Back"),
+        ("LB + RB + Menu", "LeftShoulder|RightShoulder|Start"),
+    ];
+
+    private void Change(Action<AppSettings> change)
+    {
+        _s.Settings.Update(change);
+        Rebuild();
+    }
+
+    private void RecordHotkey()
+    {
+        Main.Push(new KeyCaptureViewModel(Main, "Overlay keyboard shortcut",
+            "Press the key combination you want, e.g. Ctrl+Shift+F12. Esc cancels.",
+            hotkey =>
+            {
+                Change(s => s.OverlayHotkey = hotkey.ToString());
+                Main.ShowMessage($"Overlay shortcut: {hotkey}");
+            }));
     }
 
     private void SetRunAsAdministrator(bool value)

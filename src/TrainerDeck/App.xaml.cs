@@ -8,6 +8,8 @@ using TrainerDeck.Cheats;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Input;
+using TrainerDeck.Install;
+using TrainerDeck.Core.Install;
 using TrainerDeck.Launch;
 using TrainerDeck.Steam;
 using TrainerDeck.Core.Launch;
@@ -20,21 +22,57 @@ namespace TrainerDeck;
 
 public partial class App : Application
 {
+    public const string ImportTrainerFlag = "--import-trainer";
+
     private TrainerLibrary? _library;
     private MainViewModel? _main;
     private ControllerInput? _controllers;
     private LaunchService? _launcher;
     private SingleInstance? _instance;
+    private TrayIcon? _tray;
+    private OverlayController? _overlay;
+    private bool _exiting;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        if (e.Args.Length >= 1 && e.Args[0].Equals("--export-art", StringComparison.OrdinalIgnoreCase))
+        if (e.Args.Length == 3 && e.Args[0].Equals("--pack-icon", StringComparison.OrdinalIgnoreCase))
         {
-            string folder = e.Args.Length >= 2 ? e.Args[1] : Path.Combine(AppContext.BaseDirectory, "art");
-            BrandArt.Export(folder);
-            Shutdown();
+            int code = 0;
+            AttachConsole(-1);
+            try
+            {
+                IReadOnlyList<int> sizes = Core.Art.IcoWriter.PackFolder(e.Args[1], e.Args[2]);
+                Console.WriteLine($"Wrote {e.Args[2]} with sizes: {string.Join(", ", sizes)}");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                Console.WriteLine($"Couldn't build the icon: {ex.Message}");
+                code = 1;
+            }
+
+            Shutdown(code);
+            return;
+        }
+
+        string self = Environment.ProcessPath ?? "";
+        if (InstallLayout.IsUninstallInvocation(e.Args))
+        {
+            RunUninstall(e.Args);
+            return;
+        }
+
+        if (InstallLayout.IsSetupInvocation(self, e.Args))
+        {
+            RunSetup(e.Args);
+            return;
+        }
+
+        if (e.Args.Length == 3 && e.Args[0].Equals(ImportTrainerFlag, StringComparison.OrdinalIgnoreCase))
+        {
+            TrainerImportResult import = TrainerImport.Import(e.Args[1], e.Args[2]);
+            Shutdown(import.Success ? 0 : 1);
             return;
         }
 
@@ -54,6 +92,27 @@ public partial class App : Application
 
         bool elevated = SingleInstance.IsElevated;
         Log.Info($"Version {typeof(App).Assembly.GetName().Version}, elevated: {elevated}");
+
+        if (paths.IsInstalled && !elevated && !options.NoElevate && !options.ElevatedRelaunch && InstallState.HasElevatedTask(paths))
+        {
+            _instance.Dispose();
+            _instance = null;
+            AllowSetForegroundWindow(-1);
+            if (Installer.StartViaTask())
+            {
+                Log.Info("Started the administrator copy through Task Scheduler.");
+                Shutdown();
+                return;
+            }
+
+            Log.Warn("The Task Scheduler entry didn't start; continuing without it.");
+            _instance = SingleInstance.TryAcquire();
+            if (_instance is null)
+            {
+                Shutdown();
+                return;
+            }
+        }
 
         var settings = new SettingsStore(paths.SettingsFile, Log.Warn);
         bool relaunchDeclined = false;
@@ -83,7 +142,18 @@ public partial class App : Application
         MainWindow = window;
         window.Show();
         window.Activated += (_, _) => _launcher.ScanRunningInBackground();
-        _instance.ActivationRequested += () => Dispatcher.BeginInvoke(window.BringToFront);
+        _instance.ActivationRequested += () => Dispatcher.BeginInvoke(() => ShowMainWindow(window));
+        _tray = new TrayIcon(() => ShowMainWindow(window), () => _overlay?.Open(), ExitApp);
+        window.Closing += (_, args) =>
+        {
+            if (!_exiting && settings.Current.CloseButton == CloseButtonBehavior.Tray)
+            {
+                args.Cancel = true;
+                HideToTray(window);
+            }
+        };
+        window.HideToTrayRequested += (_, _) => HideToTray(window);
+        window.ExitRequested += (_, _) => ExitApp();
         if (relaunchDeclined)
         {
             _main.ShowMessage("Running without administrator rights.");
@@ -100,13 +170,32 @@ public partial class App : Application
         _library.StartWatching();
 
         MainViewModel main = _main;
+        var overlay = new OverlayController(main, window);
+        _overlay = overlay;
+        var background = new BackgroundInput(cheats, settings, _launcher.Running, overlay.Open);
         _controllers = new ControllerInput(
             window,
-            (action, kind) => Dispatcher.BeginInvoke(() => main.Handle(action, InputSource.Controller, kind)),
+            (action, kind) => Dispatcher.BeginInvoke(() =>
+            {
+                if (overlay.IsActive)
+                {
+                    overlay.Handle(action, InputSource.Controller, kind);
+                }
+                else
+                {
+                    main.Handle(action, InputSource.Controller, kind);
+                }
+            }),
             (name, connected) => Dispatcher.BeginInvoke(() => main.OnControllerConnectionChanged(name, connected)),
-            () => cheats.ActiveShortcutModifier,
-            cheats.OnChord);
+            () => background.Wanted,
+            background.OnButtons);
+        overlay.Controllers = _controllers;
+        overlay.Attach();
+        main.OpenOverlay = overlay.Open;
+        main.SuspendOverlayHotkey = overlay.SuspendHotkey;
         cheats.ShortcutStateChanged += (_, _) => _controllers?.Wake();
+        _launcher.Running.Changed += (_, _) => _controllers?.Wake();
+        settings.Changed += (_, _) => _controllers?.Wake();
         _controllers.Start();
     }
 
@@ -122,8 +211,34 @@ public partial class App : Application
         }
     }
 
+    private void HideToTray(Window window)
+    {
+        window.Hide();
+        _main?.Library.CloseRail();
+        _tray?.ShowHiddenNotice("It keeps listening for your cheat shortcuts and the overlay. Click the tray icon to open it.");
+        _controllers?.Wake();
+    }
+
+    private void ShowMainWindow(MainWindow window)
+    {
+        if (_tray is not null)
+        {
+            _tray.Visible = false;
+        }
+
+        window.BringToFront();
+    }
+
+    private void ExitApp()
+    {
+        _exiting = true;
+        Shutdown();
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
+        _tray?.Dispose();
+        _overlay?.Dispose();
         _controllers?.Dispose();
         _launcher?.Dispose();
         _library?.Dispose();
@@ -132,11 +247,92 @@ public partial class App : Application
         base.OnExit(e);
     }
 
+    private void RunSetup(string[] args)
+    {
+        Log.Initialize(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TrainerDeck-setup.log"));
+        string? testDir = ArgValue(args, "--install-test-dir");
+        string userSid = ArgValue(args, "--install-user") ?? Installer.CurrentUserSid();
+        if (testDir is null && !SingleInstance.IsElevated)
+        {
+            ShellResult r = ShellLauncher.Run(Environment.ProcessPath!, $"{InstallLayout.InstallFlag} --install-user {userSid}", null, "runas", IntPtr.Zero);
+            r.Process?.Dispose();
+            if (r.Error != 0)
+            {
+                MessageBox.Show("Installing Trainer Deck needs administrator permission.", "Trainer Deck setup", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            Shutdown();
+            return;
+        }
+
+        string? existing = testDir is null ? Installer.ExistingInstallDirectory() : null;
+        string target = testDir ?? existing ?? InstallLayout.DefaultTargetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+        var setup = new SetupWindow(target, userSid, systemIntegration: testDir is null, isUpdate: existing is not null);
+        MainWindow = setup;
+        setup.Show();
+    }
+
+    private void RunUninstall(string[] args)
+    {
+        Log.Initialize(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TrainerDeck-setup.log"));
+        bool quiet = args.Any(a => a.Equals("--quiet", StringComparison.OrdinalIgnoreCase));
+        if (!SingleInstance.IsElevated)
+        {
+            ShellResult r = ShellLauncher.Run(Environment.ProcessPath!, string.Join(" ", args), null, "runas", IntPtr.Zero);
+            r.Process?.Dispose();
+            Shutdown();
+            return;
+        }
+
+        string target = AppContext.BaseDirectory.TrimEnd('\\');
+        bool keepTrainers = true;
+        if (!quiet)
+        {
+            MessageBoxResult answer = MessageBox.Show(
+                $"Remove Trainer Deck from {target}?\n\nYes: remove it and also delete the Trainers folder.\nNo: remove it but keep your Trainers folder.\n\nYour settings in %LOCALAPPDATA%\\TrainerDeck are kept.",
+                "Uninstall Trainer Deck", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.No);
+            if (answer == MessageBoxResult.Cancel)
+            {
+                Shutdown();
+                return;
+            }
+
+            keepTrainers = answer == MessageBoxResult.No;
+        }
+
+        try
+        {
+            Installer.Uninstall(target, keepTrainers);
+            if (!quiet)
+            {
+                MessageBox.Show("Trainer Deck has been removed.", "Uninstall Trainer Deck", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Uninstall failed", ex);
+            MessageBox.Show($"Uninstall failed: {ex.Message}", "Uninstall Trainer Deck", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        Shutdown();
+    }
+
+    private static string? ArgValue(string[] args, string name)
+    {
+        int i = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool AllowSetForegroundWindow(int processId);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern bool AttachConsole(int processId);
+
     private static SingleInstance? AcquireInstance(StartupOptions options)
     {
         SingleInstance? instance = SingleInstance.TryAcquire();
 
-        // The unelevated copy that relaunched us may still be shutting down.
         for (int i = 0; instance is null && options.ElevatedRelaunch && i < 30; i++)
         {
             Thread.Sleep(100);

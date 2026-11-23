@@ -67,6 +67,18 @@ public sealed partial record Hotkey(HotkeyModifiers Modifiers, int Key, string K
 
     public bool IsExtendedKey => Key is 0x6F or (>= 0x21 and <= 0x28) or 0x2D or 0x2E;
 
+    public static Hotkey? FromVirtualKey(int vk, HotkeyModifiers modifiers)
+    {
+        string? name = vk switch
+        {
+            >= 0x60 and <= 0x69 => $"Num {vk - 0x60}",
+            >= 0x70 and <= 0x87 => $"F{vk - 0x6F}",
+            >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)vk).ToString(),
+            _ => Named.Values.FirstOrDefault(n => n.Vk == vk).Name,
+        };
+        return name is null ? null : Parse((modifiers == HotkeyModifiers.None ? "" : new Hotkey(modifiers, 0, "").ToString()) + name);
+    }
+
     public static Hotkey? Parse(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))

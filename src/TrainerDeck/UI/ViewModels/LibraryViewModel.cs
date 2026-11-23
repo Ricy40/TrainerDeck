@@ -63,6 +63,9 @@ public sealed partial class LibraryViewModel : PageViewModel
     private void OpenSettings() => _main.OpenSettings();
 
     [RelayCommand]
+    private void AddTrainer() => _main.AddTrainer();
+
+    [RelayCommand]
     private void OpenCheats(TrainerCardViewModel? card)
     {
         if (card is not null)
@@ -80,6 +83,25 @@ public sealed partial class LibraryViewModel : PageViewModel
             Selected = card;
             _main.OpenDetails(card);
         }
+    }
+
+    public TrainerCardViewModel? CardFor(string id)
+    {
+        if (_cards.TryGetValue(id, out TrainerCardViewModel? card))
+        {
+            return card;
+        }
+
+        TrainerEntry? entry = _library.Entries.FirstOrDefault(e => e.Id == id);
+        if (entry is null)
+        {
+            return null;
+        }
+
+        card = new TrainerCardViewModel(entry);
+        _cards[id] = card;
+        card.EnsureArt(_art, _dispatcher);
+        return card;
     }
 
     private void ReloadCovers()

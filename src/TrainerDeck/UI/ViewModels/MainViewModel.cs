@@ -30,6 +30,33 @@ public sealed partial class MainViewModel : ObservableObject
         Push(Library);
     }
 
+    public MainViewModel(MainViewModel main, Func<MainViewModel, PageViewModel> root)
+    {
+        Services = main.Services;
+        Dispatcher = main.Dispatcher;
+        Settings = main.Settings;
+        Library = main.Library;
+        IsOverlay = true;
+        LastDevice = main.LastDevice;
+        LastControllerKind = main.LastControllerKind;
+        _messageTimer = new DispatcherTimer(MessageDuration, DispatcherPriority.Normal, (_, _) => ClearMessage(), Dispatcher) { IsEnabled = false };
+        Push(root(this));
+    }
+
+    public bool IsOverlay { get; }
+
+    public int Depth => _pages.Count;
+
+    public void CloseAll()
+    {
+        while (_pages.Count > 0)
+        {
+            PageViewModel page = _pages.Pop();
+            page.PropertyChanged -= OnPagePropertyChanged;
+            page.OnClosed();
+        }
+    }
+
     public AppServices Services { get; }
 
     public Dispatcher Dispatcher { get; }
@@ -87,7 +114,7 @@ public sealed partial class MainViewModel : ObservableObject
             return true;
         }
 
-        if (action == InputAction.Settings)
+        if (action == InputAction.Settings && !IsOverlay)
         {
             OpenSettings();
             return true;
@@ -142,6 +169,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     public event Action? RestartElevatedRequested;
 
+    public Action? OpenOverlay { get; set; }
+
+    public Action<bool>? SuspendOverlayHotkey { get; set; }
+
     public void RequestRestartElevated()
     {
         Settings.Update(s => s.RunAsAdministrator = true);
@@ -175,6 +206,67 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void PickImage(string title, string? start, Action<string> picked) =>
         Push(new FileBrowserViewModel(this, title, start, folderMode: false, picked));
+
+    public static string DownloadsFolder => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
+    public string TrainerFolder => Services.Library.Roots.FirstOrDefault() ?? Services.Paths.DefaultTrainersDirectory;
+
+    public void AddTrainer()
+    {
+        string dest = TrainerFolder;
+        Push(new FileBrowserViewModel(this, "Add a trainer", DownloadsFolder, folderMode: false,
+            path => _ = ImportTrainerAsync(path, dest), TrainerImport.Extensions)
+        {
+            Body = $"Pick a trainer .exe or .zip. It's copied to {dest}; zips are extracted.",
+        });
+    }
+
+    private async Task ImportTrainerAsync(string source, string destination)
+    {
+        string name = System.IO.Path.GetFileName(source);
+        ShowMessage($"Adding {name}…");
+        TrainerImportResult result = await Task.Run(() => TrainerImport.Import(source, destination));
+        if (!result.Success && result.AccessDenied && !Services.IsElevated)
+        {
+            result = await ImportElevatedAsync(source, destination);
+        }
+
+        if (result.Success)
+        {
+            ShowMessage($"Added {name}");
+            _ = Services.Library.RescanAsync();
+        }
+        else
+        {
+            ShowError($"Couldn't add {name}: {result.Error}");
+        }
+    }
+
+    private static async Task<TrainerImportResult> ImportElevatedAsync(string source, string destination)
+    {
+        string? exe = Environment.ProcessPath;
+        if (exe is null)
+        {
+            return new TrainerImportResult(false, null, "access denied");
+        }
+
+        ShellResult r = await ShellLauncher.RunAsync(exe, $"{App.ImportTrainerFlag} \"{source}\" \"{destination}\"", null, "runas", IntPtr.Zero);
+        if (r.Error == Core.Launch.LaunchErrors.Cancelled)
+        {
+            return new TrainerImportResult(false, null, "administrator permission was declined");
+        }
+
+        if (r.Process is not { } process)
+        {
+            return new TrainerImportResult(false, null, $"error {r.Error}");
+        }
+
+        using (process)
+        {
+            int? code = await LaunchNative.WaitForExitAsync(process, TimeSpan.FromMinutes(2));
+            return code == 0 ? new TrainerImportResult(true, destination, null) : new TrainerImportResult(false, null, "the copy failed");
+        }
+    }
 
     private void SetCurrent(PageViewModel page)
     {

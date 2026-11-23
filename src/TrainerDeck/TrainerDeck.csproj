@@ -3,6 +3,10 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- Only for the tray icon (NotifyIcon). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WPF handles DPI through app.manifest; the WinForms DPI analyzer doesn't apply. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
     <RootNamespace>TrainerDeck</RootNamespace>
     <AssemblyName>TrainerDeck</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -14,7 +18,16 @@
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Keep WPF names unambiguous: WinForms types are referenced explicitly. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- In-app logo: the 96 px export of the app icon, linked from art/ (not copied). -->
+    <Resource Include="..\..\art\Icon\Icon-96.png" Link="Assets\Logo.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TrainerDeck.Core\TrainerDeck.Core.csproj" />

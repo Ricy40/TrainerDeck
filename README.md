@@ -2,7 +2,7 @@
 
 A full-screen, controller-friendly launcher for FLiNG game trainers. It's made for the ROG Ally X in Windows 11's Xbox full-screen experience, and works just as well on a desktop with a mouse and keyboard.
 
-![Trainer Deck](art/hero-1920x1080.png)
+![Trainer Deck](art/Banner-2560x1280.png)
 
 - Scans your trainer folders and turns `ELDEN RING v1.02-v1.16 Plus 35 Trainer.exe` into **Elden Ring**, with **v1.02-v1.16** and **+35** shown on the card.
 - Launches trainers as administrator, shows which ones are running, and can close them.
@@ -13,10 +13,25 @@ A full-screen, controller-friendly launcher for FLiNG game trainers. It's made f
 
 ## Getting started
 
-1. Build or download `TrainerDeck.exe` and put it in its own folder, e.g. `D:\Tools\Trainer Deck\`.
-2. Run it once. A `Trainers` folder is created next to it.
-3. Put your trainers (or their `.zip` files) in `Trainers`. Subfolders are fine. The library updates by itself.
-4. Optional: add more trainer folders in **Settings › Add a trainer folder…**.
+### Install (recommended)
+
+1. Run `TrainerDeck-Setup.exe` and approve the administrator prompt.
+2. Keep **Start as administrator without a UAC prompt** ticked and click **Install**. Trainer Deck goes into `C:\Program Files\Trainer Deck`, with a Start menu entry and an entry in **Settings › Apps** to uninstall it.
+3. Add trainers with the **+** button (or **Settings › Add a trainer…**). It opens your Downloads folder; pick a trainer `.exe` or `.zip` and it's copied (or extracted) into the Trainers folder.
+
+Running the setup again updates the installed copy in place.
+
+**About the prompt-free start:** trainers need administrator rights, and so does Trainer Deck to read them for the Cheats panel. Normally that means a UAC prompt every time it starts. Instead, the installer (which you approved as administrator) registers a Task Scheduler entry, "Trainer Deck (administrator)", that starts the installed exe with full rights.
+- Starting Trainer Deck from the Start menu, the Xbox app or a shortcut runs that entry, with no prompt.
+- The entry only starts `TrainerDeck.exe` in Program Files, which only administrators can change.
+- The Trainers folder is inside Program Files too, so other programs can't slip an exe in for Trainer Deck to run as administrator.
+- Uninstalling removes the entry. Untick the option during setup if you'd rather approve a prompt each time.
+
+### Portable
+
+1. Put `TrainerDeck.exe` in its own folder, e.g. `D:\Tools\Trainer Deck\`, and run it. A `Trainers` folder is created next to it.
+2. Put your trainers (or their `.zip` files) in `Trainers`. Subfolders are fine. The library updates by itself.
+3. Optional: add more trainer folders in **Settings › Add a trainer folder…**.
 
 ### Folder layout
 
@@ -34,7 +49,7 @@ Trainer Deck\
 └── trainerdeck.log           ← rolling log (trainerdeck.1.log … .3.log)
 ```
 
-If the exe's folder isn't writable (for example under `Program Files`), data goes to `%LOCALAPPDATA%\TrainerDeck` instead.
+That's the portable layout. An installed copy keeps `Trainers` in `C:\Program Files\Trainer Deck\Trainers`, and settings, library and caches in `%LOCALAPPDATA%\TrainerDeck`. A portable copy whose folder isn't writable also uses `%LOCALAPPDATA%\TrainerDeck`.
 
 ### Antivirus
 
@@ -98,12 +113,33 @@ FLiNG trainers expect a keyboard with a numpad. Trainer Deck lets you use them w
 - **Older trainers:** for example Hades v1.38, Trainer Deck reads the cheat names and presses their hotkeys for you. It can't see whether a cheat is on, so listen for the trainer's beep.
 - **Administrator rights:** trainers run as administrator, and Windows only lets a program read another program's window when it has the same rights. Turn on **Settings › Always run as administrator** to get the full panel (the panel offers a one-click restart). Without it, the panel falls back to pressing hotkeys, using the cheat list from the last time the trainer was read.
 
+### Overlay (in game)
+
+The overlay is a panel over your game with the running trainer's cheats. Navigate it with the pad, and press B to close it and return to the game.
+
+- **Keyboard shortcut:** Ctrl+Shift+F12 by default (Settings › Overlay › Keyboard shortcut to record another). It works from any app, so you can map an Ally X back paddle to it in Armoury Crate.
+- **Controller combo:** View + Menu by default; also L3 + R3, LB + RB + View or LB + RB + Menu. It only listens while a trainer is running.
+- **Several trainers running:** LB / RB switches between them.
+- **Fullscreen games:** use borderless or windowed mode. Exclusive full-screen games minimise when the overlay takes focus.
+
+### Xbox Game Bar widget
+
+Not built yet. A Game Bar widget has to be a separate UWP app, built with Visual Studio 2022 and its UWP tools. The overlay covers the same controls in the meantime.
+
 ### In-game controller shortcuts
 
 Turn on **Settings › Cheats › In-game controller shortcuts**, then assign shortcuts per cheat with **X** in the Cheats panel. While you play, hold the shortcut button (View by default; LB + RB, a stick click or View + Menu also work) and press the assigned button.
 
 - **Background reading:** Trainer Deck reads the controller in the background only while shortcuts are on *and* a trainer with shortcuts assigned is running. Everything else is still ignored when Trainer Deck isn't in front.
 - **The game sees the buttons too.** Pick combinations the game doesn't use at the same time, or a shortcut button the game ignores.
+
+## Running in the tray
+
+**Settings › Window › Close button** decides what the window's close button does:
+- **Exit Trainer Deck**
+- **Keep running in the tray:** while it's in the tray, the overlay shortcut, the overlay combo and cheat shortcuts keep working whenever a trainer is running. Click the tray icon to open the window again, or right-click it to open the overlay or exit.
+
+**After launching a trainer** can also be set to **Hide to tray**.
 
 ## Steam
 
@@ -123,13 +159,20 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 
 1. Open **Armoury Crate SE › Game Library**.
 2. Choose **Add game / Scan** (wording varies by version) and browse to `TrainerDeck.exe`.
-3. To give it a cover, use the artwork in [`art/`](art): `cover-600x900.png` (portrait), `hero-1920x1080.png` (banner) and `logo-512.png`. These also work for Steam non-Steam shortcuts and launchers like Playnite.
+3. To give it a cover, use the artwork in [`art/`](art) (see **Artwork** below).
 
-The artwork and the app icon are drawn in code. To regenerate them, run:
+### Artwork
 
-```powershell
-TrainerDeck.exe --export-art art
-```
+| File | Size | Use it for |
+|---|---|---|
+| `Cover-600x900.png` (also `-720x1080`, `-1440x2160`) | 2:3 | Portrait cover / box art in Armoury Crate, Steam (non-Steam shortcut), Playnite |
+| `Hero-1920x1080.png` (also `-3840x2160`) | 16:9 | Wide hero or background art. It has no text, because launchers put the name on top. |
+| `Tile-300.png` (also `-1080`, `-2160`) | 1:1 | Square tiles and icons in launchers |
+| `Icon/Icon-512.png` | 1:1 | A large transparent icon, where a launcher asks for a logo |
+| `Banner-2560x1280.png` | 2:1 | The banner at the top of this README |
+| `Social_Preview-1280x640.png` | 2:1 | GitHub's link preview (repo **Settings › General › Social preview**) |
+
+The art follows Windows 11's design guidance: Fluent colours and depth, Segoe UI Variable type, and no text on the hero. The Photoshop and Illustrator sources are in `art/Photoshop` and `art/Illustrator`. The Photoshop files are too big for GitHub, so they're kept local only.
 
 ## Building
 
@@ -140,13 +183,23 @@ dotnet build
 dotnet test
 ```
 
-### Publish (single-file exe)
+### Publish (portable exe and installer)
+
+```powershell
+.\build.ps1
+```
+
+This creates two files in `publish\`:
+- `TrainerDeck.exe`: the portable app.
+- `TrainerDeck-Setup.exe`: the installer.
+
+Both are the same self-contained program (about 70 MB; users don't need .NET installed). A copy whose name contains "Setup", or one started with `--install`, runs the installer instead of the app.
+
+The publish command on its own:
 
 ```powershell
 dotnet publish src/TrainerDeck -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:DebugType=None -o publish
 ```
-
-`publish\TrainerDeck.exe` is self-contained (about 70 MB). Users don't need .NET installed. Copy it anywhere and run it.
 
 ### Project layout
 
@@ -155,13 +208,18 @@ src/TrainerDeck.Core     no WPF; unit-tested
   Library/   FLiNG name parser, scanner, ignore rules, zip import, library.json store, queries
   Input/     gamepad state, stick digitiser, focus gate, input router, mappings, Sony/HID parsers
   Launch/    launch results and errors, running-trainer registry, startup options
+  Cheats/    hotkey parser, cheat model, older-trainer layout reader
+  Install/   install layout, Task Scheduler definition, uninstall entry
+  Art/       .ico writer (packs art/Icon PNGs into the app icon)
   Steam/     VDF parser, Steam library/manifests, name matching
   Settings/  settings.json, portable paths
 src/TrainerDeck          WPF app (MVVM, CommunityToolkit.Mvvm)
   Input/     XInput + raw HID polling, foreground check
   Launch/    ShellExecuteEx runas, process tracking, single instance
+  Cheats/    UI Automation sessions with trainers, hotkey sending, cover capture
+  Install/   setup window, installer/uninstaller, shortcuts
   Steam/     Steam location, art cache and downloads, game launching
-  Art/       icon extraction, cover/hero loading, generated brand art
+  Art/       icon extraction, cover/hero loading, colour tools
   UI/        theme, views, view models, controls
 tests/TrainerDeck.Tests  xUnit
 ```

@@ -118,6 +118,16 @@ internal static class LaunchNative
         }
     }
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint WaitForSingleObject(SafeProcessHandle handle, uint milliseconds);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetExitCodeProcess(SafeProcessHandle handle, out int exitCode);
+
+    public static Task<int?> WaitForExitAsync(SafeProcessHandle process, TimeSpan timeout) => Task.Run(() =>
+        WaitForSingleObject(process, (uint)timeout.TotalMilliseconds) == 0 && GetExitCodeProcess(process, out int code) ? code : (int?)null);
+
     public static List<IntPtr> TopLevelWindows(int processId)
     {
         var result = new List<IntPtr>();

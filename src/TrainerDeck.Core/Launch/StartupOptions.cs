@@ -5,12 +5,14 @@ public sealed record StartupOptions(bool ElevatedRelaunch, bool NoElevate)
     public const string ElevatedFlag = "--elevated";
     public const string NoElevateFlag = "--no-elevate";
 
+    public const string FromTaskFlag = "--from-task";
+
     public static StartupOptions Parse(IEnumerable<string> args)
     {
         bool elevated = false, noElevate = false;
         foreach (string a in args)
         {
-            if (a.Equals(ElevatedFlag, StringComparison.OrdinalIgnoreCase))
+            if (a.Equals(ElevatedFlag, StringComparison.OrdinalIgnoreCase) || a.Equals(FromTaskFlag, StringComparison.OrdinalIgnoreCase))
             {
                 elevated = true;
             }

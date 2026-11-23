@@ -20,12 +20,12 @@ public sealed class ControllerInput : IDisposable
     private IntPtr _hwnd;
 
     public ControllerInput(Window window, Action<InputAction, ControllerKind> onAction, Action<string, bool> onConnectionChanged,
-        Func<GamepadButtons>? chordModifier = null, Action<GamepadButtons>? onChord = null)
+        Func<bool>? backgroundWanted = null, Action<GamepadButtons>? onBackground = null)
     {
         _window = window;
         _xinput.ConnectionChanged += onConnectionChanged;
         _hid.ConnectionChanged += onConnectionChanged;
-        _poller = new GamepadPoller([_xinput, _hid], ControllerMapping.Default, IsWindowActive, onAction, chordModifier, onChord);
+        _poller = new GamepadPoller([_xinput, _hid], ControllerMapping.Default, IsWindowActive, onAction, backgroundWanted, onBackground);
     }
 
     public void Wake() => _poller.Wake();
@@ -53,8 +53,17 @@ public sealed class ControllerInput : IDisposable
         return IntPtr.Zero;
     }
 
+    public IntPtr OverlayHandle { get; set; }
+
+    public bool IsOverlayActive => OverlayHandle != IntPtr.Zero && GetForegroundWindow() == OverlayHandle;
+
     private bool IsWindowActive()
     {
+        if (IsOverlayActive)
+        {
+            return true;
+        }
+
         IntPtr hwnd = _hwnd;
         if (hwnd == IntPtr.Zero || IsIconic(hwnd))
         {

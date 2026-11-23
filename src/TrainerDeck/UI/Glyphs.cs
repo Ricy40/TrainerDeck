@@ -27,4 +27,5 @@ public static class Glyphs
     public const string Desktop = "";
     public const string Download = "";
     public const string Document = "";
+    public const string Keyboard = "";
 }

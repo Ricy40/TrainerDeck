@@ -3,12 +3,17 @@ namespace TrainerDeck.Core.Settings;
 
 public sealed class PortablePaths
 {
-    private PortablePaths(string appDirectory, string dataDirectory, bool isPortable)
+    public const string InstallMarkerFile = "installed.json";
+
+    private PortablePaths(string appDirectory, string dataDirectory, bool isPortable, bool isInstalled)
     {
         AppDirectory = appDirectory;
         DataDirectory = dataDirectory;
         IsPortable = isPortable;
+        IsInstalled = isInstalled;
     }
+
+    public bool IsInstalled { get; }
 
     public string AppDirectory { get; }
 
@@ -31,13 +36,14 @@ public sealed class PortablePaths
         fallbackDirectory ??= Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TrainerDeck");
 
-        if (IsWritable(appDirectory))
+        bool installed = File.Exists(Path.Combine(appDirectory, InstallMarkerFile));
+        if (!installed && IsWritable(appDirectory))
         {
-            return new PortablePaths(appDirectory, appDirectory, true);
+            return new PortablePaths(appDirectory, appDirectory, true, false);
         }
 
         Directory.CreateDirectory(fallbackDirectory);
-        return new PortablePaths(appDirectory, fallbackDirectory, false);
+        return new PortablePaths(appDirectory, fallbackDirectory, false, installed);
     }
 
     internal static bool IsWritable(string directory)

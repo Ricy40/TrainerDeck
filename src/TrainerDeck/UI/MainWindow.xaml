@@ -4,27 +4,11 @@
         xmlns:ui="clr-namespace:TrainerDeck.UI"
         xmlns:vm="clr-namespace:TrainerDeck.UI.ViewModels"
         xmlns:views="clr-namespace:TrainerDeck.UI.Views"
+        xmlns:controls="clr-namespace:TrainerDeck.UI.Controls"
         Title="Trainer Deck" Width="1280" Height="800" MinWidth="760" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" SnapsToDevicePixels="True">
-    <Window.Resources>
-        <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
-            <views:LibraryView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:DetailsViewModel}">
-            <views:DetailsView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:IgnorePatternsViewModel}">
-            <views:IgnorePatternsView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:TextEntryViewModel}">
-            <views:TextEntryView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:RowListPageViewModel}">
-            <views:RowListView />
-        </DataTemplate>
-    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -38,64 +22,7 @@
             </ContentControl.RenderTransform>
         </ContentControl>
 
-        <!-- Toast -->
-        <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="40,0,40,22" MaxWidth="900"
-                CornerRadius="14" Padding="20,13" Background="{StaticResource SurfaceHigherBrush}"
-                BorderThickness="1" IsHitTestVisible="False" Opacity="0">
-            <Border.RenderTransform>
-                <TranslateTransform Y="16" />
-            </Border.RenderTransform>
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.5" />
-            </Border.Effect>
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsMessageVisible}" Value="True">
-                            <DataTrigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18" />
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Y" To="0" Duration="0:0:0.22">
-                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25" />
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Y" To="16" Duration="0:0:0.25" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.ExitActions>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding MessageIsError}" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource Glyph}">
-                            <Setter Property="Text" Value="&#xE946;" />
-                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding MessageIsError}" Value="True">
-                                    <Setter Property="Text" Value="&#xE783;" />
-                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-                <TextBlock Text="{Binding Message}" Style="{StaticResource TextBase}" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="820" />
-            </StackPanel>
-        </Border>
+        <controls:ToastView />
 
         <!-- Footer: context button hints -->
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
@@ -105,32 +32,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <ItemsControl Grid.Column="1" ItemsSource="{Binding Hints}" HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:HintViewModel}">
-                            <StackPanel Orientation="Horizontal" Margin="22,0,0,0">
-                                <Border x:Name="Cap" Style="{StaticResource KeyCap}">
-                                    <TextBlock Text="{Binding Key}" Style="{StaticResource TextBase}" Foreground="{Binding KeyBrush}"
-                                               FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding Round}" Value="True">
-                                    <Setter TargetName="Cap" Property="CornerRadius" Value="14" />
-                                    <Setter TargetName="Cap" Property="Width" Value="28" />
-                                    <Setter TargetName="Cap" Property="Height" Value="28" />
-                                    <Setter TargetName="Cap" Property="Padding" Value="0" />
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <controls:HintsBar Grid.Column="1" />
             </Grid>
         </Border>
     </Grid>

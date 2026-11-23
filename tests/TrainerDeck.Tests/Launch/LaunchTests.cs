@@ -50,6 +50,7 @@ public class StartupOptionsTests
         Assert.True(o.ElevatedRelaunch);
         Assert.False(o.NoElevate);
         Assert.True(StartupOptions.Parse(["--no-elevate"]).NoElevate);
+        Assert.True(StartupOptions.Parse(["--from-task"]).ElevatedRelaunch);
     }
 
     [Theory]

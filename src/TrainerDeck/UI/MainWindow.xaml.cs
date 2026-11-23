@@ -48,6 +48,10 @@ public partial class MainWindow : Window
 
     private LibraryView? LibraryView => WindowInterop.FindDescendant<LibraryView>(this);
 
+    public event EventHandler? HideToTrayRequested;
+
+    public event EventHandler? ExitRequested;
+
     public void BringToFront()
     {
         if (WindowState == WindowState.Minimized)
@@ -89,7 +93,10 @@ public partial class MainWindow : Window
                 WindowState = WindowState.Minimized;
                 break;
             case AfterLaunchBehavior.Close:
-                Close();
+                ExitRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case AfterLaunchBehavior.HideToTray:
+                HideToTrayRequested?.Invoke(this, EventArgs.Empty);
                 break;
         }
     }
@@ -105,6 +112,13 @@ public partial class MainWindow : Window
     {
         Key key = e.Key == Key.System ? e.SystemKey : e.Key;
         ModifierKeys mods = Keyboard.Modifiers;
+
+        if (_vm.CurrentPage is KeyCaptureViewModel capture)
+        {
+            _vm.LastDevice = InputSource.Keyboard;
+            e.Handled = capture.OnKey(key, mods);
+            return;
+        }
 
         if (Keyboard.FocusedElement is TextBox box)
         {
