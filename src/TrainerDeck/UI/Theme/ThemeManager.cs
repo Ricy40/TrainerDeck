@@ -135,6 +135,7 @@ public sealed class ThemeManager
         Pair("TextOnAccentFillColorPrimary", ToColor(t.TextOnAccent));
 
         bool dark = t.IsDark;
+        Pair("SystemFillColorCriticalBackground", Hex(dark ? "#442726" : "#FDE7E9"));
         Pair("ControlAltFillColorSecondary", Hex(dark ? "#18000000" : "#06000000"));
         Pair("ControlFillColorTertiary", Hex(dark ? "#08FFFFFF" : "#4DF9F9F9"));
         Pair("ControlFillColorInputActive", Hex(dark ? "#B31E1E1E" : "#FFFFFFFF"));

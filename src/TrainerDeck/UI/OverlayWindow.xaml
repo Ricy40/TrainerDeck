@@ -6,13 +6,13 @@
         ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="True"
         Foreground="{DynamicResource TextPrimaryBrush}" FontFamily="{StaticResource UiFont}"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
-    <Border x:Name="Panel" HorizontalAlignment="Right" Width="620" CornerRadius="22,0,0,22"
-            Background="{DynamicResource OverlayPanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0">
+    <Border x:Name="Panel" HorizontalAlignment="Right" Width="620" Margin="0,12,12,12" CornerRadius="8"
+            Background="{DynamicResource OverlayPanelBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
         <Border.RenderTransform>
             <TranslateTransform x:Name="Slide" X="0" />
         </Border.RenderTransform>
         <Border.Effect>
-            <DropShadowEffect BlurRadius="40" ShadowDepth="0" Opacity="0.6" />
+            <DropShadowEffect BlurRadius="48" ShadowDepth="12" Direction="270" Opacity="{DynamicResource ShadowOpacityHigh}" />
         </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
@@ -21,17 +21,18 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Margin="28,22,28,0">
-                <Image Source="/Assets/Logo.png" Width="28" Height="28" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock Text="Trainer Deck" Style="{StaticResource TextSecondary}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <TextBlock x:Name="SwitchHint" Text="  ·  LB / RB: other trainer" Style="{StaticResource TextSecondary}" FontSize="13"
+            <StackPanel Orientation="Horizontal" Margin="24,18,24,0">
+                <Image Source="/Assets/Logo.png" Width="20" Height="20" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality" />
+                <TextBlock Text="Trainer Deck" Style="{StaticResource TextSecondary}" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock x:Name="SwitchHint" Text="  ·  LB / RB: other trainer" Style="{StaticResource TextSecondary}" FontSize="12"
                            VerticalAlignment="Center" Visibility="Collapsed" />
             </StackPanel>
 
             <ContentControl x:Name="PageHost" Grid.Row="1" Content="{Binding CurrentPage}" Focusable="False" Margin="-20,-10,-20,0" />
             <controls:ToastView Grid.Row="1" />
 
-            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,0,22" Padding="20,0" Height="56">
+            <Border Grid.Row="2" Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,1,0,0" CornerRadius="0,0,7,7" Padding="20,0" Height="56">
                 <controls:HintsBar />
             </Border>
         </Grid>

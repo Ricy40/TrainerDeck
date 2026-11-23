@@ -9,11 +9,19 @@ public sealed class TrayIcon : IDisposable
 
     public TrayIcon(Action open, Action openOverlay, Action exit)
     {
-        var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Open Trainer Deck", null, (_, _) => open());
-        menu.Items.Add("Open overlay", null, (_, _) => openOverlay());
+        var renderer = new TrayMenuRenderer();
+        var menu = new Forms.ContextMenuStrip
+        {
+            Renderer = renderer,
+            ShowImageMargin = false,
+            Padding = new Forms.Padding(0, 4, 0, 4),
+            Font = new System.Drawing.Font("Segoe UI Variable Text", 10f),
+        };
+        menu.Items.Add(Item("Open Trainer Deck", "", open));
+        menu.Items.Add(Item("Open overlay", "", openOverlay));
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => exit());
+        menu.Items.Add(Item("Exit", "", exit));
+        menu.Opening += (_, _) => renderer.Prepare(menu);
 
         _icon = new Forms.NotifyIcon
         {
@@ -29,6 +37,13 @@ public sealed class TrayIcon : IDisposable
                 open();
             }
         };
+    }
+
+    private static Forms.ToolStripMenuItem Item(string text, string glyph, Action click)
+    {
+        var item = new Forms.ToolStripMenuItem(text) { Tag = glyph, Padding = TrayMenuRenderer.ItemPadding };
+        item.Click += (_, _) => click();
+        return item;
     }
 
     public bool Visible

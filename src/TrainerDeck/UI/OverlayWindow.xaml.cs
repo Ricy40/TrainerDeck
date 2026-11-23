@@ -58,14 +58,14 @@ public partial class OverlayWindow : Window
         Top = monitorDips.Top;
         Width = monitorDips.Width;
         Height = monitorDips.Height;
-        Panel.Width = Math.Min(620, monitorDips.Width);
+        Panel.Width = Math.Min(620, monitorDips.Width - 24);
     }
 
     public void AnimateIn()
     {
-        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        Slide.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, new DoubleAnimation(80, 0, TimeSpan.FromMilliseconds(180)) { EasingFunction = ease });
-        Panel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)));
+        var ease = new QuinticEase { EasingMode = EasingMode.EaseOut };
+        Slide.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, new DoubleAnimation(80, 0, TimeSpan.FromMilliseconds(250)) { EasingFunction = ease });
+        Panel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(167)));
     }
 
     public void FocusPage() => Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>

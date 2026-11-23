@@ -5,11 +5,13 @@
         Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True">
     <Window.Resources>
+        <!-- Fluent check box -->
         <Style x:Key="SetupCheck" TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="Margin" Value="0,0,0,14" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="0,0,0,16" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AccentFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
@@ -18,14 +20,18 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border x:Name="Box" Width="22" Height="22" CornerRadius="6" VerticalAlignment="Top" Margin="0,1,12,0"
-                                    Background="{DynamicResource SurfaceHigherBrush}" BorderBrush="{DynamicResource TextTertiaryBrush}" BorderThickness="1">
-                                <TextBlock x:Name="Tick" Text="&#xE73E;" Style="{StaticResource Glyph}" FontSize="13" Foreground="{DynamicResource TextOnAccentBrush}"
-                                           HorizontalAlignment="Center" Visibility="Collapsed" />
+                            <Border x:Name="Box" Width="20" Height="20" CornerRadius="4" VerticalAlignment="Top" Margin="0,0,12,0"
+                                    Background="{DynamicResource ControlAltFillColorSecondaryBrush}"
+                                    BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" BorderThickness="1">
+                                <TextBlock x:Name="Tick" Text="&#xE73E;" FontFamily="{StaticResource IconFont}" FontSize="12" Foreground="{DynamicResource TextOnAccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
                             </Border>
-                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                            <ContentPresenter Grid.Column="1" VerticalAlignment="Top" Margin="0,1,0,0" />
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentBrush}" />
                                 <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
@@ -39,53 +45,96 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Fluent progress bar: a 1 px track with a 3 px accent indicator -->
+        <Style x:Key="SetupProgress" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid x:Name="PART_Track" ClipToBounds="True">
+                            <Border Height="1" CornerRadius="0.5" Background="{DynamicResource ControlStrongStrokeColorDefaultBrush}" VerticalAlignment="Center" />
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" />
+                            <Border x:Name="Runner" Width="140" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Visibility="Collapsed">
+                                <Border.RenderTransform>
+                                    <TranslateTransform X="-140" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Setter TargetName="PART_Indicator" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="Runner" Property="Visibility" Value="Visible" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard x:Name="Run">
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetName="Runner" Storyboard.TargetProperty="RenderTransform.X"
+                                                             From="-140" To="600" Duration="0:0:1.6">
+                                                <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <StopStoryboard BeginStoryboardName="Run" />
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Grid Margin="36,30,36,28">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal">
-            <Image x:Name="Logo" Width="56" Height="56" Margin="0,0,16,0" />
+        <StackPanel Orientation="Horizontal" Margin="32,28,32,0">
+            <Image x:Name="Logo" Width="48" Height="48" Margin="0,0,16,0" />
             <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="Heading" Text="Install Trainer Deck" Style="{StaticResource TextTitle}" FontSize="26" />
-                <TextBlock x:Name="VersionText" Style="{StaticResource TextSecondary}" FontSize="14" Margin="0,4,0,0" />
+                <TextBlock x:Name="Heading" Text="Install Trainer Deck" Style="{StaticResource TextTitle}" FontSize="24" />
+                <TextBlock x:Name="VersionText" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,0,0" />
             </StackPanel>
         </StackPanel>
 
-        <StackPanel x:Name="OptionsPanel" Grid.Row="1" Margin="0,28,0,0">
-            <TextBlock Text="Install location" Style="{StaticResource TextSecondary}" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8" />
-            <DockPanel Margin="0,0,0,24">
-                <Button x:Name="BrowseButton" DockPanel.Dock="Right" Style="{StaticResource FlatButton}" Margin="10,0,0,0" Content="Change…" Click="OnBrowse" />
-                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="12,9">
-                    <TextBlock x:Name="TargetText" Style="{StaticResource TextBase}" FontSize="14" TextTrimming="CharacterEllipsis" />
+        <StackPanel x:Name="OptionsPanel" Grid.Row="1" Margin="32,28,32,0">
+            <TextBlock Text="Install location" Style="{StaticResource TextBase}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <DockPanel Margin="0,0,0,28">
+                <Button x:Name="BrowseButton" DockPanel.Dock="Right" Style="{StaticResource FlatButton}" Height="36" Margin="8,0,0,0" Content="Change…" Click="OnBrowse" />
+                <Border Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="4" Height="36" Padding="12,0">
+                    <TextBlock x:Name="TargetText" Style="{StaticResource TextBase}" FontSize="14" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                 </Border>
             </DockPanel>
 
             <CheckBox x:Name="TaskCheck" Style="{StaticResource SetupCheck}" IsChecked="True">
                 <StackPanel>
                     <TextBlock Text="Start as administrator without a UAC prompt (recommended)" TextWrapping="Wrap" />
-                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" TextWrapping="Wrap" Margin="0,3,0,0"
+                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"
                                Text="Needed for the Cheats panel and overlay. Uses a Task Scheduler entry that only this installed copy can use." />
                 </StackPanel>
             </CheckBox>
             <CheckBox x:Name="DesktopCheck" Style="{StaticResource SetupCheck}" Content="Desktop shortcut" />
-            <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"
+            <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
                        Text="Your trainers go in the Trainers folder inside the install location. Use “Add a trainer” in the app to copy them there." />
         </StackPanel>
 
-        <StackPanel x:Name="ProgressPanel" Grid.Row="1" Margin="0,40,0,0" Visibility="Collapsed">
-            <TextBlock x:Name="ProgressText" Style="{StaticResource TextBase}" FontSize="16" TextWrapping="Wrap" />
-            <ProgressBar x:Name="Bar" IsIndeterminate="True" Height="4" Margin="0,18,0,0" Foreground="{DynamicResource AccentBrush}"
-                         Background="{DynamicResource SurfaceHighBrush}" BorderThickness="0" />
+        <StackPanel x:Name="ProgressPanel" Grid.Row="1" Margin="32,40,32,0" Visibility="Collapsed">
+            <TextBlock x:Name="ProgressText" Style="{StaticResource TextBase}" FontSize="15" TextWrapping="Wrap" />
+            <ProgressBar x:Name="Bar" Style="{StaticResource SetupProgress}" IsIndeterminate="True" Margin="0,18,0,0" />
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="CancelButton" Style="{StaticResource FlatButton}" Content="Cancel" Click="OnCancel" Margin="0,0,10,0" />
-            <Button x:Name="InstallButton" Style="{StaticResource AccentButton}" Content="Install" Click="OnInstall" Padding="24,10" IsDefault="True" />
-        </StackPanel>
+        <!-- Command area, as in Windows 11 dialogs -->
+        <Border Grid.Row="2" Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0" Padding="24">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" Style="{StaticResource FlatButton}" Content="Cancel" Click="OnCancel" Margin="0,0,8,0" MinWidth="120" />
+                <Button x:Name="InstallButton" Style="{StaticResource AccentButton}" Content="Install" Click="OnInstall" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
