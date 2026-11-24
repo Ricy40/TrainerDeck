@@ -26,6 +26,9 @@ namespace TrainerDeck.Widget
 
         public Task<JsonObject> OpenAsync() => SendAsync("{\"op\":\"open\"}");
 
+        // Windows error from the last failed connect: 2 = Trainer Deck isn't running, 5 = access denied, 231 = pipe busy.
+        public int LastError { get; private set; }
+
         private async Task<JsonObject> SendAsync(string request)
         {
             await _gate.WaitAsync();
@@ -35,6 +38,7 @@ namespace TrainerDeck.Widget
                 {
                     try
                     {
+                        LastError = 0;
                         EnsureConnected();
                         _writer.Write(request + "\n");
                         _writer.Flush();
@@ -70,7 +74,8 @@ namespace TrainerDeck.Widget
             IntPtr handle = CreateFileFromAppW(PipePath, GenericRead | GenericWrite, 0, IntPtr.Zero, OpenExisting, 0, IntPtr.Zero);
             if (handle == new IntPtr(-1))
             {
-                throw new IOException("Trainer Deck isn't running (" + Marshal.GetLastWin32Error() + ").");
+                LastError = Marshal.GetLastWin32Error();
+                throw new IOException("Couldn't open Trainer Deck's pipe (" + LastError + ").");
             }
 
             var encoding = new UTF8Encoding(false);

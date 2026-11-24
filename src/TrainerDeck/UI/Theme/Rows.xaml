@@ -95,7 +95,7 @@
     <!-- Shared left part of a row: glyph, label, detail -->
     <DataTemplate x:Key="RowText" DataType="{x:Type vm:RowViewModel}">
         <DockPanel>
-            <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" Style="{StaticResource Glyph}" FontSize="20" Width="40"
+            <TextBlock x:Name="RowGlyph" DockPanel.Dock="Left" Text="{Binding Glyph}" Style="{StaticResource Glyph}" FontSize="20" Width="40"
                        VerticalAlignment="Center" Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="{Binding Label}" Style="{StaticResource TextBase}" FontSize="16" TextTrimming="CharacterEllipsis"
@@ -104,6 +104,23 @@
                            TextWrapping="Wrap" Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
         </DockPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Tone}" Value="folder">
+                <Setter TargetName="RowGlyph" Property="Foreground" Value="{DynamicResource FileFolderBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tone}" Value="exe">
+                <Setter TargetName="RowGlyph" Property="Foreground" Value="{DynamicResource FileExeBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tone}" Value="zip">
+                <Setter TargetName="RowGlyph" Property="Foreground" Value="{DynamicResource FileZipBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tone}" Value="image">
+                <Setter TargetName="RowGlyph" Property="Foreground" Value="{DynamicResource FileImageBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tone}" Value="drive">
+                <Setter TargetName="RowGlyph" Property="Foreground" Value="{DynamicResource FileDriveBrush}" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:HeaderRow}">

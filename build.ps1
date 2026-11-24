@@ -2,7 +2,8 @@
 #   TrainerDeck.exe        portable: runs from any folder, keeps its data next to it
 #   TrainerDeck-Setup.exe  the same program; named "Setup" it installs itself into Program Files
 #
-# With Visual Studio's "Universal Windows Platform development" workload installed, it also builds the
+# With Visual Studio's UWP tools installed (in Build Tools for Visual Studio 2022: the WinUI workload with its
+# optional Universal Windows Platform tools), it also builds the
 # Xbox Game Bar widget, signs it with a self-signed "CN=Trainer Deck" certificate (created once in .signing\,
 # which stays out of git) and embeds both in the installer. -NoWidget skips that.
 param([string]$Out = "publish", [switch]$NoWidget)
@@ -15,8 +16,15 @@ $publishArgs = @()
 function Find-MSBuild {
     $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
     if (-not (Test-Path $vswhere)) { return $null }
-    $path = & $vswhere -latest -prerelease -requires Microsoft.VisualStudio.Workload.Universal -find "MSBuild\**\Bin\MSBuild.exe" | Select-Object -First 1
-    if ($path -and (Test-Path $path)) { return $path }
+    # Any Visual Studio or Build Tools install that has the UWP XAML build targets. Newer installers put them under
+    # the WinUI workload's optional Universal Windows Platform tools, so look for the files rather than a workload name.
+    $installs = & $vswhere -all -prerelease -products * -sort -property installationPath
+    foreach ($install in $installs) {
+        $uwp = Get-ChildItem (Join-Path $install "MSBuild\Microsoft\WindowsXaml") -Recurse -Filter "Microsoft.Windows.UI.Xaml.CSharp.targets" -ErrorAction SilentlyContinue
+        $path = Get-ChildItem (Join-Path $install "MSBuild") -Recurse -Filter MSBuild.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.Directory.Name -eq "Bin" } | Select-Object -First 1
+        if ($uwp -and $path) { return $path.FullName }
+    }
     return $null
 }
 
@@ -58,7 +66,7 @@ if (-not $NoWidget) {
             "/p:PackageCertificateKeyFile=$($cert.Pfx)" "/p:PackageCertificatePassword=$($cert.Password)"
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-        $msix = Get-ChildItem $widgetOut -Recurse -Include *.msix, *.appx | Where-Object { $_.Name -notlike "*Dependencies*" } | Select-Object -First 1
+        $msix = Get-ChildItem $widgetOut -Recurse -Filter "TrainerDeck.Widget_*.msix" | Select-Object -First 1
         if (-not $msix) { throw "The widget build didn't produce an .msix package." }
         New-Item -ItemType Directory -Force $widgetPackage | Out-Null
         Copy-Item $msix.FullName (Join-Path $widgetPackage "TrainerDeck.GameBarWidget.msix")

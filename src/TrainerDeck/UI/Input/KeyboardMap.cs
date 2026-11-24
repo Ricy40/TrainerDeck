@@ -13,6 +13,7 @@ public static class KeyboardMap
 
         return key switch
         {
+            Key.Up when alt => InputAction.ParentFolder,
             Key.Up => InputAction.Up,
             Key.Down => InputAction.Down,
             Key.Left => InputAction.Left,
@@ -27,6 +28,7 @@ public static class KeyboardMap
             Key.Enter => InputAction.Activate,
             Key.Escape => InputAction.Back,
             Key.BrowserBack => InputAction.Back,
+            Key.Back => InputAction.ParentFolder,
             Key.D when ctrl => InputAction.Favourite,
             Key.I when ctrl => InputAction.Details,
             Key.Apps => InputAction.Details,
@@ -49,6 +51,7 @@ public static class KeyboardMap
         InputAction.Sort => "Ctrl+S",
         InputAction.Settings => "Ctrl+,",
         InputAction.Rescan => "F5",
+        InputAction.ParentFolder => "Backspace",
         InputAction.ToggleFullScreen => "F11",
         InputAction.LetterRail => "Release",
         InputAction.PageUp => "PgUp",

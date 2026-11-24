@@ -14,6 +14,9 @@
     <DataTemplate DataType="{x:Type vm:TextEntryViewModel}">
         <views:TextEntryView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:FileBrowserViewModel}">
+        <views:FileBrowserView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:AccentPickerViewModel}">
         <views:AccentPickerView />
     </DataTemplate>

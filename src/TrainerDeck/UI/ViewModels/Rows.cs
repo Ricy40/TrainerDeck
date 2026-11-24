@@ -23,6 +23,8 @@ public abstract partial class RowViewModel : ObservableObject
 
     public virtual bool IsCard => true;
 
+    public string? Tone { get; init; }
+
     public virtual string ActivateLabel => "Select";
 
     public virtual string? SecondaryLabel => null;

@@ -28,6 +28,11 @@ public static class ControllerGlyphs
             return new ButtonGlyph($"{l.Text} {r.Text}", false, Neutral);
         }
 
+        if (action is InputAction.ParentFolder)
+        {
+            return For(GamepadButtons.LeftShoulder, kind);
+        }
+
         if (action is InputAction.Up or InputAction.Down or InputAction.Left or InputAction.Right)
         {
             return new ButtonGlyph("✥", false, Neutral);

@@ -246,10 +246,16 @@
                                 BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" />
                         <Border x:Name="Underline" CornerRadius="0,0,4,4" BorderThickness="0,0,0,1" Height="4" VerticalAlignment="Bottom"
                                 BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+                        <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}" Margin="{TemplateBinding Padding}" Padding="2,0,0,0"
+                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}" FontSize="{TemplateBinding FontSize}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" IsHitTestVisible="False" Visibility="Collapsed" />
                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" Focusable="False"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
                         </Trigger>

@@ -118,10 +118,36 @@
                     <TextBlock Text="{Binding OptionsBadge}" Style="{StaticResource TextBase}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OnImageTextBrush}" />
                 </Border>
                 <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
-                    <Border Background="{StaticResource BadgeBrush}" CornerRadius="4" Padding="5,4" HorizontalAlignment="Left"
-                            Visibility="{Binding IsFavourite, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphStarFill}" FontSize="14" Foreground="{DynamicResource FavouriteBrush}" />
-                    </Border>
+                    <!-- Favourite star: always shown (filled yellow) on favourites, otherwise on hover or when selected -->
+                    <Button x:Name="StarButton" Focusable="False" Cursor="Hand" HorizontalAlignment="Left" Opacity="0"
+                            Command="{Binding DataContext.ToggleFavouriteCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                            CommandParameter="{Binding}" ToolTip="Favourite (Ctrl+D)">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bd" Background="{StaticResource BadgeBrush}" CornerRadius="4" Width="30" Height="30">
+                                    <Grid>
+                                        <TextBlock x:Name="Outline" Style="{StaticResource Glyph}" Text="{StaticResource GlyphStar}" FontSize="15"
+                                                   HorizontalAlignment="Center" Foreground="{StaticResource OnImageTextBrush}" />
+                                        <TextBlock x:Name="Fill" Style="{StaticResource Glyph}" Text="{StaticResource GlyphStarFill}" FontSize="15"
+                                                   HorizontalAlignment="Center" Foreground="{DynamicResource FavouriteBrush}" Visibility="Collapsed" />
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#E6000000" />
+                                        <Setter TargetName="Outline" Property="Foreground" Value="{DynamicResource FavouriteBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="Bd" Property="Opacity" Value="0.8" />
+                                    </Trigger>
+                                    <DataTrigger Binding="{Binding IsFavourite}" Value="True">
+                                        <Setter TargetName="Fill" Property="Visibility" Value="Visible" />
+                                        <Setter TargetName="Outline" Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                     <Border Background="{DynamicResource RunningBrush}" CornerRadius="4" Padding="7,2,7,3" Margin="0,6,0,0" HorizontalAlignment="Left"
                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="12" FontWeight="Bold" Foreground="#05210F" />
@@ -131,6 +157,15 @@
             <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" IsHitTestVisible="False" />
         </Grid>
         <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsFavourite}" Value="True">
+                <Setter TargetName="StarButton" Property="Opacity" Value="1" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                <Setter TargetName="StarButton" Property="Opacity" Value="1" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                <Setter TargetName="StarButton" Property="Opacity" Value="1" />
+            </DataTrigger>
             <DataTrigger Binding="{Binding HasCover}" Value="True">
                 <Setter TargetName="IconArea" Property="Visibility" Value="Collapsed" />
             </DataTrigger>

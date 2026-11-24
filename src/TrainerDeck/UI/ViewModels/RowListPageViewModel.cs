@@ -33,6 +33,17 @@ public abstract partial class RowListPageViewModel : PageViewModel
 
     protected virtual string BackLabel => "Back";
 
+    public bool CanGoBack => Main.Depth > 1;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void GoBack()
+    {
+        if (!Handle(InputAction.Back))
+        {
+            Main.Pop();
+        }
+    }
+
     public override IReadOnlyList<FooterHint> Hints
     {
         get

@@ -123,7 +123,19 @@ public partial class MainWindow : Window
 
         if (Keyboard.FocusedElement is TextBox box)
         {
-            e.Handled = box.Name == "SearchBox" ? HandleSearchBoxKey(box, key, mods) : HandleTextBoxKey(box, key, mods);
+            e.Handled = box.Name switch
+            {
+                "SearchBox" => HandleSearchBoxKey(box, key, mods),
+                "PathBox" => HandlePathBoxKey(box, key, mods),
+                _ => HandleTextBoxKey(box, key, mods),
+            };
+            return;
+        }
+
+        if (key == Key.L && mods == ModifierKeys.Control && WindowInterop.FindDescendant<FileBrowserView>(this) is { } browserView)
+        {
+            browserView.FocusPath();
+            e.Handled = true;
             return;
         }
 
@@ -150,6 +162,24 @@ public partial class MainWindow : Window
                 return _vm.Handle(InputAction.Back, InputSource.Keyboard);
             case Key.Enter when !box.AcceptsReturn && mods == ModifierKeys.None:
                 return _vm.Handle(InputAction.Activate, InputSource.Keyboard);
+            case Key.F11:
+                return _vm.Handle(InputAction.ToggleFullScreen, InputSource.Keyboard);
+            default:
+                return false;
+        }
+    }
+
+    private bool HandlePathBoxKey(TextBox box, Key key, ModifierKeys mods)
+    {
+        switch (key)
+        {
+            case Key.Enter when _vm.CurrentPage is FileBrowserViewModel browser:
+                browser.GoToPath(box.Text);
+                FocusPage();
+                return true;
+            case Key.Escape or Key.Down:
+                FocusPage();
+                return true;
             case Key.F11:
                 return _vm.Handle(InputAction.ToggleFullScreen, InputSource.Keyboard);
             default:

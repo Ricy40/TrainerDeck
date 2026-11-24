@@ -144,6 +144,18 @@ public sealed class ThemeManager
         Pair("LayerFillColorDefault", t.Neutrals == NeutralSet.BrandDark ? n.Surface : Hex(dark ? "#4C3A3A3A" : "#80FFFFFF"));
         Pair("SubtleFillColorTransparent", Colors.Transparent);
 
+        Color Readable(string hex)
+        {
+            Rgb c = ThemeResolver.EnsureContrast(Rgb.Parse(hex), t.Background, 3.0);
+            return Color.FromRgb(c.R, c.G, c.B);
+        }
+
+        Pair("FileFolder", Readable("#FFC83D"));
+        Pair("FileExe", Readable("#4CC2FF"));
+        Pair("FileZip", Readable("#C69CFF"));
+        Pair("FileImage", Readable("#6CCB5F"));
+        Pair("FileDrive", Readable("#9AA4B2"));
+
         Pair("FocusStrokeColorOuter", t.Neutrals == NeutralSet.BrandDark ? ToColor(t.AccentFill) : n.Text);
         Pair("FocusStrokeColorInner", Hex(dark ? "#B3000000" : "#B3FFFFFF"));
         d["ShadowOpacity"] = dark ? 0.45 : 0.16;

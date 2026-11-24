@@ -12,11 +12,9 @@ public class PackageIdentityTests
     }
 
     [Fact]
-    public void Family_name_is_name_and_publisher_id()
+    public void Family_name_matches_the_installed_widget()
     {
-        string family = PackageIdentity.WidgetFamilyName;
-        Assert.StartsWith("TrainerDeck.GameBarWidget_", family);
-        Assert.Equal(13, family.Length - "TrainerDeck.GameBarWidget_".Length);
+        Assert.Equal("TrainerDeck.GameBarWidget_beb72m7ynk430", PackageIdentity.WidgetFamilyName);
     }
 }
 

@@ -23,6 +23,7 @@ public enum InputAction
     ToggleFullScreen,
     LetterRail,
     LetterRailEnd,
+    ParentFolder,
 }
 
 public enum InputSource

@@ -168,11 +168,29 @@ public partial class LibraryView : UserControl, IPageView
         e.Handled = true;
     }
 
+    private static bool IsInsideButton(DependencyObject? element)
+    {
+        for (DependencyObject? e = element; e is not null and not ListBoxItem; e = e is System.Windows.Media.Visual ? System.Windows.Media.VisualTreeHelper.GetParent(e) : LogicalTreeHelper.GetParent(e))
+        {
+            if (e is System.Windows.Controls.Primitives.ButtonBase)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static MenuItem MenuItem(string header, string glyph, ICommand command, object parameter) =>
         new() { Header = header, Tag = glyph, Command = command, CommandParameter = parameter };
 
     private void OnCardDoubleClick(object sender, MouseButtonEventArgs e)
     {
+        if (IsInsideButton(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
         if (e.ChangedButton == MouseButton.Left
             && ItemsControl.ContainerFromElement(CardList, e.OriginalSource as DependencyObject) is ListBoxItem { DataContext: TrainerCardViewModel card })
         {

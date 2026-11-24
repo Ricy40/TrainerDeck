@@ -1,13 +1,17 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Gaming.XboxGameBar;
+using Microsoft.UI.Xaml.Controls;
 using Windows.Data.Json;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace TrainerDeck.Widget
@@ -18,9 +22,11 @@ namespace TrainerDeck.Widget
 
         private readonly DeckClient _client = new DeckClient();
         private readonly ObservableCollection<RowItem> _rows = new ObservableCollection<RowItem>();
+        private readonly ObservableCollection<RowItem> _active = new ObservableCollection<RowItem>();
         private readonly DispatcherTimer _poll = new DispatcherTimer();
         private XboxGameBarWidget _widget;
         private bool _busy;
+        private bool _online;
 
         public CheatsWidget()
         {
@@ -29,7 +35,11 @@ namespace TrainerDeck.Widget
             _poll.Interval = PollInterval;
             _poll.Tick += async (s, e) => await RefreshAsync();
             Window.Current.VisibilityChanged += OnVisibilityChanged;
+            ActualThemeChanged += (s, e) => ApplyBackground();
         }
+
+        // Game Bar hides the widget body behind its own UI when it's only pinned over a game.
+        private bool PinnedOnly => _widget != null && _widget.GameBarDisplayMode == XboxGameBarDisplayMode.PinnedOnly;
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -37,15 +47,34 @@ namespace TrainerDeck.Widget
             if (_widget != null)
             {
                 RequestedTheme = _widget.RequestedTheme;
-                _widget.RequestedThemeChanged += OnRequestedThemeChanged;
+                _widget.RequestedThemeChanged += (s, a) => OnUi(() => RequestedTheme = s.RequestedTheme);
+                _widget.RequestedOpacityChanged += (s, a) => OnUi(ApplyBackground);
+                _widget.GameBarDisplayModeChanged += (s, a) => OnUi(ApplyMode);
             }
 
+            ApplyBackground();
+            ApplyMode();
             _poll.Start();
             await RefreshAsync();
         }
 
-        private async void OnRequestedThemeChanged(XboxGameBarWidget sender, object args) =>
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => RequestedTheme = sender.RequestedTheme);
+        private async void OnUi(DispatchedHandler action) => await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, action);
+
+        // The body's background follows the theme and the transparency the user picks in Game Bar.
+        private void ApplyBackground()
+        {
+            bool dark = ActualTheme != ElementTheme.Light;
+            Color color = dark ? Color.FromArgb(255, 0x20, 0x20, 0x20) : Color.FromArgb(255, 0xF3, 0xF3, 0xF3);
+            Root.Background = new SolidColorBrush(color) { Opacity = _widget?.RequestedOpacity ?? 1.0 };
+        }
+
+        private void ApplyMode()
+        {
+            bool pinned = PinnedOnly;
+            Rows.ItemsSource = pinned ? _active : _rows;
+            Rows.IsItemClickEnabled = !pinned;
+            UpdateActive();
+        }
 
         private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
@@ -105,24 +134,31 @@ namespace TrainerDeck.Widget
 
         private void Show(JsonObject state)
         {
-            bool online = state != null;
-            OfflinePanel.Visibility = online ? Visibility.Collapsed : Visibility.Visible;
-            Rows.Visibility = online ? Visibility.Visible : Visibility.Collapsed;
-            if (!online)
+            _online = state != null;
+            OfflinePanel.Visibility = _online ? Visibility.Collapsed : Visibility.Visible;
+            Header.Visibility = _online ? Visibility.Visible : Visibility.Collapsed;
+            Rows.Visibility = _online ? Visibility.Visible : Visibility.Collapsed;
+            if (!_online)
             {
-                TrainerText.Text = "Trainer Deck";
-                StatusText.Text = "";
-                MessageBar.Visibility = Visibility.Collapsed;
+                int error = _client.LastError;
+                OfflineDetail.Text = error == 0 || error == 2
+                    ? "Open it, or keep it running in the tray, to control your trainer's cheats from here."
+                    : "Trainer Deck is running but the widget couldn't connect (error " + error + ").";
+                MessageBar.IsOpen = false;
+                PinnedEmpty.Visibility = Visibility.Collapsed;
                 _rows.Clear();
+                _active.Clear();
                 return;
             }
 
-            TrainerText.Text = state.GetNamedString("trainer", "Trainer Deck");
+            TrainerText.Text = state.GetNamedString("trainer", "No trainer running");
             StatusText.Text = state.GetNamedString("status", "");
             string message = state.GetNamedString("message", "");
-            MessageText.Text = message;
-            MessageBar.Visibility = string.IsNullOrEmpty(message) ? Visibility.Collapsed : Visibility.Visible;
+            MessageBar.Message = message;
+            MessageBar.Severity = state.GetNamedBoolean("messageIsError", false) ? InfoBarSeverity.Error : InfoBarSeverity.Informational;
+            MessageBar.IsOpen = message.Length > 0 && !PinnedOnly;
             UpdateRows(state.GetNamedArray("rows", new JsonArray()));
+            UpdateActive();
         }
 
         private void UpdateRows(JsonArray rows)
@@ -148,6 +184,30 @@ namespace TrainerDeck.Widget
             {
                 _rows.Add(new RowItem(value.GetObject()));
             }
+        }
+
+        // Pinned view: only cheats that are switched on, in list order.
+        private void UpdateActive()
+        {
+            var on = _rows.Where(r => r.IsToggle && r.IsOn).ToList();
+            for (int i = _active.Count - 1; i >= 0; i--)
+            {
+                if (!on.Contains(_active[i]))
+                {
+                    _active.RemoveAt(i);
+                }
+            }
+
+            for (int i = 0; i < on.Count; i++)
+            {
+                if (i >= _active.Count || _active[i] != on[i])
+                {
+                    _active.Remove(on[i]);
+                    _active.Insert(i, on[i]);
+                }
+            }
+
+            PinnedEmpty.Visibility = _online && PinnedOnly && on.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }
