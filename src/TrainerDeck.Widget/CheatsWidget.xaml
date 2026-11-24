@@ -5,15 +5,31 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     Background="Transparent">
 
+    <!-- Game Bar's own widget colours (sampled from Capture and Audio): body, control fill, divider. -->
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="WidgetControlBrush" Color="#37383B" />
+                    <SolidColorBrush x:Key="WidgetDividerBrush" Color="#45484B" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="WidgetControlBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="WidgetDividerBrush" Color="#DADCE0" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+
     <!-- Laid out like Game Bar's own widgets: Game Bar draws the title bar, the widget a compact, translucent body. -->
-    <Grid x:Name="Root" Padding="12,8,12,12">
+    <Grid x:Name="Root" Padding="8,4,8,8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid x:Name="Header" Padding="4,0,4,6">
+        <Grid x:Name="Header" Padding="8,6,8,10" BorderBrush="{ThemeResource WidgetDividerBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -23,7 +39,7 @@
                        Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </Grid>
 
-        <muxc:InfoBar x:Name="MessageBar" Grid.Row="1" IsOpen="False" IsClosable="False" Margin="0,0,0,6" />
+        <muxc:InfoBar x:Name="MessageBar" Grid.Row="1" IsOpen="False" IsClosable="False" Margin="4,4,4,4" />
 
         <ListView x:Name="Rows" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True"
                   ItemClick="OnRowClick" KeyDown="OnRowKeyDown" XYFocusKeyboardNavigation="Enabled" Padding="0">
@@ -38,8 +54,11 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid Opacity="{Binding ItemOpacity}">
-                        <TextBlock Text="{Binding Label}" Visibility="{Binding HeaderVisibility}" Margin="0,10,0,2"
-                                   Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <!-- Section heading like Audio's "Default devices": a divider above, bold text -->
+                        <Border Visibility="{Binding HeaderVisibility}" Margin="-8,6,-8,0" Padding="8,12,8,4"
+                                BorderBrush="{ThemeResource WidgetDividerBrush}" BorderThickness="0,1,0,0">
+                            <TextBlock Text="{Binding Label}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </Border>
                         <Grid Visibility="{Binding ItemVisibility}" Padding="0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -52,8 +71,8 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Value with d-pad arrows when it can be stepped -->
-                                <Border Visibility="{Binding ValueVisibility}" Padding="6,3" CornerRadius="4" MinWidth="56" Margin="0,0,8,0"
-                                        Background="{ThemeResource ControlFillColorDefaultBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                                <Border Visibility="{Binding ValueVisibility}" Padding="8,4" CornerRadius="4" MinWidth="56" Margin="0,0,8,0"
+                                        Background="{ThemeResource WidgetControlBrush}">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <FontIcon Glyph="&#xE76B;" FontSize="9" Visibility="{Binding StepperVisibility}" Margin="0,0,6,0"
                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

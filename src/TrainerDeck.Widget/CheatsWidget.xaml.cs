@@ -64,7 +64,7 @@ namespace TrainerDeck.Widget
         private void ApplyBackground()
         {
             bool dark = ActualTheme != ElementTheme.Light;
-            Color color = dark ? Color.FromArgb(255, 0x20, 0x20, 0x20) : Color.FromArgb(255, 0xF3, 0xF3, 0xF3);
+            Color color = dark ? Color.FromArgb(255, 0x25, 0x28, 0x2C) : Color.FromArgb(255, 0xF3, 0xF4, 0xF6);
             Root.Background = new SolidColorBrush(color) { Opacity = _widget?.RequestedOpacity ?? 1.0 };
         }
 

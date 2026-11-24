@@ -76,6 +76,7 @@ public sealed class ThemeManager
         void Paint() => WindowBackdrop.Apply(window, Current, WindowBackdrop.WantsMica(Mode, fullScreen?.Invoke() ?? false));
         EventHandler onChanged = (_, _) => Paint();
         window.SourceInitialized += (_, _) => Paint();
+        WindowIcons.Attach(window);
         Changed += onChanged;
         window.Closed += (_, _) => Changed -= onChanged;
         return Paint;

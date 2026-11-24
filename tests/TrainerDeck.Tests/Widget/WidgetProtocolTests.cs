@@ -21,7 +21,7 @@ public class PackageIdentityTests
 public class WidgetProtocolTests
 {
     [Theory]
-    [InlineData("""{"op":"state"}""", "state", null, null)]
+    [InlineData("""{"op":"state"}""", "state", null, null)] 
     [InlineData("""{"op":"activate","row":3}""", "activate", 3, null)]
     [InlineData("""{"op":"adjust","row":5,"delta":-1}""", "adjust", 5, -1)]
     public void Parses_requests(string json, string op, int? row, int? delta)

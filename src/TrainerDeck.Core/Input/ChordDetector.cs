@@ -1,7 +1,6 @@
 namespace TrainerDeck.Core.Input;
 
 
-// Fires once when every button of the combo is held at the same time.
 public sealed class ComboDetector
 {
     private bool _wasHeld;

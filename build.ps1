@@ -6,9 +6,15 @@
 # optional Universal Windows Platform tools), it also builds the
 # Xbox Game Bar widget, signs it with a self-signed "CN=Trainer Deck" certificate (created once in .signing\,
 # which stays out of git) and embeds both in the installer. -NoWidget skips that.
-param([string]$Out = "publish", [switch]$NoWidget)
+#
+# -Portable builds just the portable TrainerDeck.exe (no installer copy) into .\publish\portable. It still carries the
+# widget, which Settings can install; add -NoWidget for a quicker build without it.
+param([string]$Out = "publish", [switch]$NoWidget, [switch]$Portable)
 
 $ErrorActionPreference = "Stop"
+if ($Portable) {
+    if (-not $PSBoundParameters.ContainsKey("Out")) { $Out = "publish\portable" }
+}
 if (-not [IO.Path]::IsPathRooted($Out)) { $Out = Join-Path $PSScriptRoot $Out }
 $Out = [IO.Path]::GetFullPath($Out)
 $publishArgs = @()
@@ -88,5 +94,8 @@ dotnet publish "$PSScriptRoot\src\TrainerDeck" -c Release -r win-x64 --self-cont
     -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:DebugType=None -o $Out @publishArgs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Copy-Item (Join-Path $Out "TrainerDeck.exe") (Join-Path $Out "TrainerDeck-Setup.exe") -Force
+if (-not $Portable) {
+    Copy-Item (Join-Path $Out "TrainerDeck.exe") (Join-Path $Out "TrainerDeck-Setup.exe") -Force
+}
+
 Get-ChildItem $Out -Filter *.exe | Select-Object Name, @{ n = "MB"; e = { [math]::Round($_.Length / 1MB, 1) } }

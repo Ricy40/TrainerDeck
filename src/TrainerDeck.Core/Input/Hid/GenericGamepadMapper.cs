@@ -48,7 +48,6 @@ public static class GenericGamepadMapper
             return null;
         }
 
-        // 4-position hats report 0..3 in 90 degree steps.
         return range == 4 ? (int)(v * 2) : (int)(v * 8 / range);
     }
 }

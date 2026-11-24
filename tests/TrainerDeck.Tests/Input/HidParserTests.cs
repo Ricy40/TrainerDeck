@@ -19,7 +19,6 @@ public class SonyReportParserTests
     public void Unknown_ids_are_not_sony() =>
         Assert.Null(SonyReportParser.Identify(0x045E, 0x0B12));
 
-    // DS4 layout from offset o: LX LY RX RY hat+face shoulders system L2 R2
     private static byte[] Ds4(byte id, int offset, byte lx = 128, byte ly = 128, byte hatFace = HatCentred, byte shoulders = 0, byte l2 = 0, byte r2 = 0, int length = 64)
     {
         var r = new byte[length];
@@ -35,7 +34,6 @@ public class SonyReportParserTests
         return r;
     }
 
-    // DualSense layout from offset o: LX LY RX RY L2 R2 counter hat+face shoulders system
     private static byte[] DualSense(byte id, int offset, byte lx = 128, byte ly = 128, byte hatFace = HatCentred, byte shoulders = 0, byte l2 = 0, int length = 64)
     {
         var r = new byte[length];
@@ -53,7 +51,6 @@ public class SonyReportParserTests
     [Fact]
     public void Ds4_usb_face_buttons_map_to_xbox_positions()
     {
-        // Cross (0x20) + Triangle (0x80), hat centred
         Assert.True(SonyReportParser.TryParse(SonyModel.DualShock4, Ds4(0x01, 1, hatFace: 0x20 | 0x80 | HatCentred), false, out var s));
         Assert.Equal(GamepadButtons.A | GamepadButtons.Y, s.Buttons);
         Assert.Equal(ControllerKind.PlayStation, s.Kind);

@@ -182,7 +182,7 @@ public static partial class FlingNameParser
     {
         if (scanRoot is null)
         {
-            return Path.GetDirectoryName(dir) is null; // drive root
+            return Path.GetDirectoryName(dir) is null;
         }
 
         string d = TrimSlash(Path.GetFullPath(dir));

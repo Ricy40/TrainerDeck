@@ -28,6 +28,7 @@
   <ItemGroup>
     <!-- In-app logo: the 96 px export of the app icon, linked from art/ (not copied). -->
     <Resource Include="..\..\art\Icon\Icon-96.png" Link="Assets\Logo.png" />
+    <Resource Include="Assets\TrainerDeck.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TrainerDeck.Core\TrainerDeck.Core.csproj" />

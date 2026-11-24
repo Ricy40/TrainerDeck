@@ -1,5 +1,6 @@
 using System.Windows.Threading;
 using TrainerDeck.Cheats;
+using TrainerDeck.Launch;
 using TrainerDeck.Core.Cheats;
 using TrainerDeck.Core.Input;
 using TrainerDeck.UI.Input;
@@ -116,6 +117,10 @@ public sealed class CheatsViewModel : RowListPageViewModel
         if (running)
         {
             rows.Add(new ActionRow("Show trainer window", Glyphs.View, SwitchToTrainer, "Switch to", "Brings the trainer itself to the front"));
+            rows.Add(new ActionRow("Close trainer", Glyphs.Close, () => _ = CloseTrainer(), "Close", "Ends the trainer; its cheats switch off")
+            {
+                IsDanger = true,
+            });
         }
 
         if (_snapshot.Status == SessionStatus.NeedsAdministrator && !_cheats.IsElevated)
@@ -403,6 +408,25 @@ public sealed class CheatsViewModel : RowListPageViewModel
 
     private string ShortcutLabel(GamepadButtons button) =>
         $"{ControllerGlyphs.Describe(_cheats.ConfiguredModifier, Main.LastControllerKind)} + {ControllerGlyphs.Describe(button, Main.LastControllerKind)}";
+
+    private async Task CloseTrainer()
+    {
+        switch (await _s.Launcher.CloseAsync(_card.Id))
+        {
+            case CloseResult.Closed:
+                Main.ShowMessage($"Closed {_card.Title}");
+                break;
+            case CloseResult.NotRunning:
+                Main.ShowMessage($"{_card.Title} isn't running");
+                break;
+            case CloseResult.NeedsAdministrator:
+                Main.ShowError($"{_card.Title} runs as administrator. Turn on “Run Trainer Deck as administrator” to close it from here.");
+                break;
+            default:
+                Main.ShowError($"Couldn't close {_card.Title}.");
+                break;
+        }
+    }
 
     private void SwitchToTrainer()
     {

@@ -65,7 +65,9 @@ public class LibraryStoreTests
     {
         using var dir = new TempDir();
         string path = Path.Combine(dir.Path, "settings.json");
-        Assert.True(JsonFile.LoadOrDefault<AppSettings>(path).StartFullScreen);
+        AppSettings defaults = JsonFile.LoadOrDefault<AppSettings>(path);
+        Assert.False(defaults.StartFullScreen);
+        Assert.Equal(CloseButtonBehavior.Ask, defaults.CloseButton);
 
         JsonFile.Save(path, new AppSettings { AfterLaunch = AfterLaunchBehavior.Close, TrainerFolders = [@"D:\Trainers"] });
         AppSettings s = JsonFile.LoadOrDefault<AppSettings>(path);

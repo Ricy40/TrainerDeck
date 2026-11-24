@@ -33,6 +33,11 @@ public static class ControllerGlyphs
             return For(GamepadButtons.LeftShoulder, kind);
         }
 
+        if (action is InputAction.CloseTrainer)
+        {
+            return For(GamepadButtons.B, kind);
+        }
+
         if (action is InputAction.Up or InputAction.Down or InputAction.Left or InputAction.Right)
         {
             return new ButtonGlyph("✥", false, Neutral);

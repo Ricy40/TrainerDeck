@@ -49,7 +49,6 @@ public static class SonyReportParser
         };
     }
 
-    // LX LY RX RY [hat+face] [shoulders/menu] [ps/counter] L2 R2
     private static bool ParseDs4Layout(ReadOnlySpan<byte> r, int o, out GamepadState state)
     {
         state = default;
@@ -62,7 +61,6 @@ public static class SonyReportParser
         return true;
     }
 
-    // LX LY RX RY L2 R2 counter [hat+face] [shoulders/menu] [ps/touch/mute]
     private static bool ParseDualSenseLayout(ReadOnlySpan<byte> r, int o, out GamepadState state)
     {
         state = default;

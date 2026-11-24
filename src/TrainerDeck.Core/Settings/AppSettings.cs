@@ -12,6 +12,7 @@ public enum CloseButtonBehavior
 {
     Exit,
     Tray,
+    Ask,
 }
 
 public sealed class AppSettings
@@ -20,9 +21,9 @@ public sealed class AppSettings
 
     public List<string> IgnorePatterns { get; set; } = new();
 
-    public bool StartFullScreen { get; set; } = true;
+    public bool StartFullScreen { get; set; }
 
-    public AfterLaunchBehavior AfterLaunch { get; set; } = AfterLaunchBehavior.Minimize;
+    public AfterLaunchBehavior AfterLaunch { get; set; } = AfterLaunchBehavior.StayOpen;
 
     public bool RunAsAdministrator { get; set; }
 
@@ -36,7 +37,7 @@ public sealed class AppSettings
 
     public string CheatShortcutModifier { get; set; } = "Back";
 
-    public CloseButtonBehavior CloseButton { get; set; } = CloseButtonBehavior.Exit;
+    public CloseButtonBehavior CloseButton { get; set; } = CloseButtonBehavior.Ask;
 
     public TrainerDeck.Core.Theming.AppearanceMode Appearance { get; set; } = TrainerDeck.Core.Theming.AppearanceMode.TrainerDeck;
 

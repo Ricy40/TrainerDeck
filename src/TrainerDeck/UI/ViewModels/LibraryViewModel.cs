@@ -8,6 +8,7 @@ using TrainerDeck.Art;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Core.Launch;
+using TrainerDeck.Core.Settings;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Launch;
 
@@ -174,14 +175,49 @@ public sealed partial class LibraryViewModel : PageViewModel
         new(InputAction.LetterRail, "Release to jump"),
         new(InputAction.Back, "Cancel"),
     ]
-    : [
-        new(InputAction.Activate, Selected?.IsRunning == true ? "Cheats" : "Launch"),
-        new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"),
-        new(InputAction.Details, "Details"),
-        new(InputAction.NextTab, "Switch tab", "Tab · hold for A–Z"),
-        new(InputAction.Sort, "Sort"),
-        HasSearch ? new(InputAction.Back, "Clear search") : new(InputAction.Settings, "Settings"),
-    ];
+    : LibraryHints();
+
+    private FooterHint[] LibraryHints()
+    {
+        var hints = new List<FooterHint>
+        {
+            new(InputAction.Activate, Selected?.IsRunning == true ? "Cheats" : "Launch", Primary: true),
+        };
+        if (Selected?.IsRunning == true && !HasSearch)
+        {
+            hints.Add(new(InputAction.CloseTrainer, "Close trainer", Primary: true));
+        }
+
+        hints.Add(new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"));
+        hints.Add(new(InputAction.Details, "Details"));
+        hints.Add(new(InputAction.NextTab, "Switch tab", "Tab · hold for A–Z"));
+        hints.Add(new(InputAction.Sort, "Sort"));
+        hints.Add(HasSearch ? new(InputAction.Back, "Clear search") : new(InputAction.Settings, "Settings"));
+        return hints.ToArray();
+    }
+
+    private string? _closeArmedFor;
+    private DateTime _closeArmedAt;
+
+    private void RequestCloseSelected()
+    {
+        if (Selected is not { IsRunning: true } card)
+        {
+            return;
+        }
+
+        if (_closeArmedFor == card.Id && DateTime.UtcNow - _closeArmedAt < TimeSpan.FromSeconds(3))
+        {
+            _closeArmedFor = null;
+            _ = CloseTrainer(card);
+            return;
+        }
+
+        _closeArmedFor = card.Id;
+        _closeArmedAt = DateTime.UtcNow;
+        string key = _main.LastDevice == InputSource.Controller ? "B" : "Delete";
+        _main.ShowMessage($"Press {key} again to close {card.Title}");
+    }
 
     partial void OnTabChanged(LibraryTab value) => Refresh();
 
@@ -235,6 +271,12 @@ public sealed partial class LibraryViewModel : PageViewModel
                 return true;
             case InputAction.Back when HasSearch:
                 SearchText = "";
+                return true;
+            case InputAction.CloseTrainer:
+                RequestCloseSelected();
+                return true;
+            case InputAction.Back when _main.LastDevice == InputSource.Controller && Selected?.IsRunning == true:
+                RequestCloseSelected();
                 return true;
             default:
                 return false;
@@ -418,8 +460,18 @@ public sealed partial class LibraryViewModel : PageViewModel
                 break;
             case LaunchOutcome.Started:
                 _main.ShowMessage($"{card.Title} started");
-                await _launcher.FocusWhenReadyAsync(result.ProcessId);
-                _main.RequestAfterLaunch(_main.Settings.Current.AfterLaunch);
+                AfterLaunchBehavior after = _main.Settings.Current.AfterLaunch;
+                if (after == AfterLaunchBehavior.StayOpen)
+                {
+                    await _launcher.WhenWindowReadyAsync(result.ProcessId);
+                    await Task.Delay(250);
+                }
+                else
+                {
+                    await _launcher.FocusWhenReadyAsync(result.ProcessId);
+                }
+
+                _main.RequestAfterLaunch(after);
                 break;
         }
     }

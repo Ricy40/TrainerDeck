@@ -51,7 +51,7 @@ public sealed class TrainerScanner
                     cancellationToken.ThrowIfCancellationRequested();
                     if (!seen.Add(path))
                     {
-                        continue; // overlapping roots
+                        continue;
                     }
 
                     string rel = Path.GetRelativePath(root, path);

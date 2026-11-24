@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
@@ -10,7 +11,7 @@ using TrainerDeck.UI.Input;
 
 namespace TrainerDeck.UI.ViewModels;
 
-public sealed record HintViewModel(string Key, string Label, bool Round, System.Windows.Media.Brush KeyBrush);
+public sealed record HintViewModel(string Key, string Label, bool Round, System.Windows.Media.Brush KeyBrush, bool Primary = false);
 
 public sealed partial class MainViewModel : ObservableObject
 {
@@ -83,6 +84,17 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<HintViewModel> Hints { get; } = new();
 
     public event EventHandler? ToggleFullScreenRequested;
+
+    public event EventHandler? CloseRequested;
+
+    [ObservableProperty]
+    private bool isFullScreen;
+
+    [RelayCommand]
+    private void ToggleFullScreen() => ToggleFullScreenRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void RequestClose() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
     public event Action<AfterLaunchBehavior>? AfterLaunchRequested;
 
@@ -298,11 +310,11 @@ public sealed partial class MainViewModel : ObservableObject
             if (LastDevice == InputSource.Controller)
             {
                 ButtonGlyph g = ControllerGlyphs.For(hint.Action, LastControllerKind, ControllerMapping.Default);
-                Hints.Add(new HintViewModel(g.Text, hint.ControllerLabel ?? hint.Label, g.Round, Frozen(g.Color == ControllerGlyphs.Neutral ? KeyCapText : Readable(g.Color))));
+                Hints.Add(new HintViewModel(g.Text, hint.ControllerLabel ?? hint.Label, g.Round, Frozen(g.Color == ControllerGlyphs.Neutral ? KeyCapText : Readable(g.Color)), hint.Primary));
             }
             else
             {
-                Hints.Add(new HintViewModel(KeyboardMap.Label(hint.Action), hint.Label, false, Frozen(KeyCapText)));
+                Hints.Add(new HintViewModel(KeyboardMap.Label(hint.Action), hint.Label, false, Frozen(KeyCapText), hint.Primary));
             }
         }
     }

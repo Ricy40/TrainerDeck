@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
 using TrainerDeck.Core.Library;
+using TrainerDeck.Core.Settings;
 using TrainerDeck.Core.Text;
 using TrainerDeck.UI.Input;
 
@@ -122,6 +123,45 @@ public sealed class ZipImportViewModel : RowListPageViewModel
         {
             Main.Pop();
         }
+    }
+}
+
+public sealed class CloseChoiceViewModel : RowListPageViewModel
+{
+    private readonly Action _toTray;
+    private readonly Action _exit;
+    private bool _remember;
+
+    public CloseChoiceViewModel(MainViewModel main, Action toTray, Action exit) : base(main)
+    {
+        _toTray = toTray;
+        _exit = exit;
+        Title = "Close Trainer Deck?";
+        Body = "In the tray, Trainer Deck keeps listening for the overlay and your cheat shortcuts while a trainer runs. "
+            + "Click its tray icon to open it again.";
+        SetRows(
+        [
+            new ActionRow("Keep running in the tray", Glyphs.Minimize, () => Choose(CloseButtonBehavior.Tray), "Choose",
+                "The overlay and cheat shortcuts keep working"),
+            new ActionRow("Exit Trainer Deck", Glyphs.Power, () => Choose(CloseButtonBehavior.Exit), "Choose", "Closes it completely"),
+            new ToggleRow("Remember my choice", false, v => _remember = v, "Don't ask again. Change it in Settings › Window › Close button.")
+            {
+                Glyph = Glyphs.Check,
+            },
+        ]);
+    }
+
+    protected override string BackLabel => "Cancel";
+
+    private void Choose(CloseButtonBehavior choice)
+    {
+        if (_remember)
+        {
+            Main.Settings.Update(s => s.CloseButton = choice);
+        }
+
+        Main.Pop();
+        (choice == CloseButtonBehavior.Tray ? _toTray : _exit)();
     }
 }
 

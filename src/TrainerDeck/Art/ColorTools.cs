@@ -13,7 +13,7 @@ internal static class ColorTools
         bmp.CopyPixels(px, stride, 0);
 
         double r = 0, g = 0, b = 0, total = 0;
-        for (int i = 0; i < px.Length; i += 4 * 3) // sample every third pixel
+        for (int i = 0; i < px.Length; i += 4 * 3) 
         {
             byte a = px[i + 3];
             if (a < 160)

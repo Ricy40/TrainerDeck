@@ -16,9 +16,16 @@
                         <TextBlock Text="{Binding Key}" Style="{StaticResource TextBase}" Foreground="{Binding KeyBrush}"
                                    FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Text="{Binding Label}" Style="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="Label" Text="{Binding Label}" Style="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
                 <DataTemplate.Triggers>
+                    <!-- Launch, Cheats and Close trainer: accent outline and label so the main actions stand out -->
+                    <DataTrigger Binding="{Binding Primary}" Value="True">
+                        <Setter TargetName="Cap" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                        <Setter TargetName="Cap" Property="BorderThickness" Value="1.5" />
+                        <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                        <Setter TargetName="Label" Property="FontWeight" Value="SemiBold" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding Round}" Value="True">
                         <Setter TargetName="Cap" Property="CornerRadius" Value="14" />
                         <Setter TargetName="Cap" Property="Width" Value="28" />

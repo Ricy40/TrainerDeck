@@ -8,6 +8,17 @@ namespace TrainerDeck.Tests.Install;
 public class InstallLayoutTests
 {
     [Theory]
+    [InlineData("0.1.0", "0.1.0", 0)]
+    [InlineData("0.1.0.0", "0.1.0", 0)]
+    [InlineData("0.1.0", "0.2.0", -1)]
+    [InlineData("1.0.0", "0.9.5", 1)]
+    [InlineData(null, "0.1.0", -1)]
+    [InlineData("", "0.1.0", -1)]
+    [InlineData("garbage", "0.1.0", -1)]
+    public void Compares_installed_and_setup_versions(string? installed, string current, int expected) =>
+        Assert.Equal(expected, Math.Sign(InstallLayout.CompareVersions(installed, current)));
+
+    [Theory]
     [InlineData(@"C:\Downloads\TrainerDeck-Setup.exe", new string[0], true)]
     [InlineData(@"C:\Downloads\setup.exe", new string[0], true)]
     [InlineData(@"C:\Tools\TrainerDeck.exe", new[] { "--install" }, true)]

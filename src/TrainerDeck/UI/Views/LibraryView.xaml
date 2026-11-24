@@ -101,6 +101,36 @@
                         <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
                             <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
                         </Button>
+                        <Button Height="36" Focusable="False"
+                                Command="{Binding DataContext.ToggleFullScreenCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SubtleButton}">
+                                    <Setter Property="ToolTip" Value="Full screen (F11)" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsFullScreen, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="ToolTip" Value="Exit full screen (F11)" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="&#xE740;" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.IsFullScreen, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                <Setter Property="Text" Value="&#xE73F;" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Button>
+                        <Rectangle Width="1" Margin="4,9" Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Focusable="False" ToolTip="Close Trainer Deck"
+                                Command="{Binding DataContext.RequestCloseCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock Style="{StaticResource Glyph}" Text="&#xE7E8;" FontSize="16" />
+                        </Button>
                     </StackPanel>
                 </Border>
             </StackPanel>

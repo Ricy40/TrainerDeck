@@ -5,12 +5,13 @@ using TrainerDeck.Core.Library;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.Core.Text;
 using TrainerDeck.Core.Theming;
+using TrainerDeck.Install;
 
 namespace TrainerDeck.UI.ViewModels;
 
 public sealed class SettingsViewModel : RowListPageViewModel
 {
-    private static readonly string[] AfterLaunchOptions = ["Stay open", "Minimise", "Close Trainer Deck", "Hide to tray"];
+    private static readonly string[] AfterLaunchOptions = ["Stay in front", "Minimise", "Close Trainer Deck", "Hide to tray"];
 
     private static readonly (string Label, string Value)[] ShortcutModifiers =
     [
@@ -97,7 +98,8 @@ public sealed class SettingsViewModel : RowListPageViewModel
 
         rows.Add(new HeaderRow("Launching"));
         rows.Add(new ChoiceRow("After launching a trainer", AfterLaunchOptions, (int)Current.AfterLaunch,
-            i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i)) { Glyph = Glyphs.Rocket });
+            i => _s.Settings.Update(s => s.AfterLaunch = (AfterLaunchBehavior)i),
+            "Stay in front keeps Trainer Deck on top and opens the trainer behind it") { Glyph = Glyphs.Rocket });
 
         rows.Add(new HeaderRow("Cheats"));
         rows.Add(new ToggleRow("In-game controller shortcuts", Current.CheatShortcutsEnabled, v => _s.Settings.Update(s => s.CheatShortcutsEnabled = v),
@@ -108,7 +110,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
             i => _s.Settings.Update(s => s.CheatShortcutModifier = ShortcutModifiers[i].Value),
             "Hold this, then press the button assigned to a cheat") { Glyph = Glyphs.Game });
 
-        rows.Add(new HeaderRow("Overlay"));
+        rows.Add(new HeaderRow("Overlay and Game Bar"));
         rows.Add(new ToggleRow("In-game overlay", Current.OverlayEnabled, v => Change(s => s.OverlayEnabled = v),
             "A panel over your game with the running trainer's cheats, controlled with the pad") { Glyph = Glyphs.Layers });
         if (Current.OverlayEnabled)
@@ -126,6 +128,8 @@ public sealed class SettingsViewModel : RowListPageViewModel
                 rows.Add(new ActionRow("Open the overlay now", Glyphs.View, Main.OpenOverlay, "Open", "Try it out"));
             }
         }
+
+        AddWidgetRow(rows);
 
         rows.Add(new HeaderRow("Appearance"));
         rows.Add(new ChoiceRow("Colours", ["Trainer Deck", "Match Windows", "Custom"], (int)Current.Appearance,
@@ -147,7 +151,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
         rows.Add(new HeaderRow("Window"));
         rows.Add(new ToggleRow("Start in full screen", Current.StartFullScreen, v => _s.Settings.Update(s => s.StartFullScreen = v),
             "F11 switches at any time") { Glyph = Glyphs.FullScreen });
-        rows.Add(new ChoiceRow("Close button", ["Exit Trainer Deck", "Keep running in the tray"], (int)Current.CloseButton,
+        rows.Add(new ChoiceRow("Close button", ["Exit Trainer Deck", "Keep running in the tray", "Ask every time"], (int)Current.CloseButton,
             i => _s.Settings.Update(s => s.CloseButton = (CloseButtonBehavior)i),
             "In the tray, Trainer Deck keeps listening for the overlay and cheat shortcuts while a trainer runs") { Glyph = Glyphs.Power });
 
@@ -176,6 +180,95 @@ public sealed class SettingsViewModel : RowListPageViewModel
         ("LB + RB + View", "LeftShoulder|RightShoulder|Back"),
         ("LB + RB + Menu", "LeftShoulder|RightShoulder|Start"),
     ];
+
+    private bool _widgetBusy;
+
+    private void AddWidgetRow(List<RowViewModel> rows)
+    {
+        string? version = WidgetInstaller.InstalledVersion();
+        bool available = WidgetInstaller.Available;
+        if (version is null && !available)
+        {
+            return;
+        }
+
+        string detail = _widgetBusy
+            ? "Working…  ·  this can take a couple of minutes"
+            : version is not null
+                ? $"Installed (version {version})  ·  open Game Bar with the Xbox button or Win + G"
+                : "Control your trainer's cheats from Game Bar. Asks for administrator permission once.";
+        ActionRow row = version is null
+            ? new ActionRow("Xbox Game Bar widget", Glyphs.Game, () => RunWidget("install"), "Install", detail)
+            : available
+                ? new ActionRow("Xbox Game Bar widget", Glyphs.Game, () => RunWidget("install"), "Reinstall", detail, () => RunWidget("remove"), "Remove")
+                : new ActionRow("Xbox Game Bar widget", Glyphs.Game, () => RunWidget("remove"), "Remove", detail);
+        rows.Add(_widgetBusy ? new ActionRow(row.Label, row.Glyph, () => { }, "Working", detail) { IsEnabled = false } : row);
+    }
+
+    private async void RunWidget(string verb)
+    {
+        if (_widgetBusy)
+        {
+            return;
+        }
+
+        _widgetBusy = true;
+        Rebuild();
+        Main.ShowMessage(verb == "install" ? "Installing the Game Bar widget…" : "Removing the Game Bar widget…");
+        string? error = await Task.Run(() => RunWidgetCommand(verb, _s.IsElevated));
+        _widgetBusy = false;
+        Rebuild();
+        if (error is null)
+        {
+            Main.ShowMessage(verb == "install" ? "Game Bar widget installed. Find it in Game Bar's widget menu." : "Game Bar widget removed");
+        }
+        else
+        {
+            Main.ShowError(error);
+        }
+    }
+
+    private static string? RunWidgetCommand(string verb, bool elevated)
+    {
+        string exe = Environment.ProcessPath ?? "";
+        string resultFile = Path.Combine(Path.GetTempPath(), $"TrainerDeck-widget-{Guid.NewGuid():N}.txt");
+        var psi = new ProcessStartInfo(exe, $"{WidgetInstaller.CommandFlag} {verb} --install-user {Installer.CurrentUserSid()} --result \"{resultFile}\"")
+        {
+            UseShellExecute = true,
+            Verb = elevated ? "open" : "runas",
+        };
+        try
+        {
+            using Process? process = Process.Start(psi);
+            if (process is null)
+            {
+                return "Couldn't start the widget installer.";
+            }
+
+            process.WaitForExit();
+            if (process.ExitCode == 0)
+            {
+                return null;
+            }
+
+            string detail = File.Exists(resultFile) ? File.ReadAllText(resultFile).Trim() : "";
+            return detail.Length > 0 ? detail : "The Game Bar widget couldn't be " + (verb == "install" ? "installed." : "removed.");
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            return "Administrator permission is needed for the Game Bar widget.";
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(resultFile);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
 
     private void PickAccent() =>
         Main.Push(new AccentPickerViewModel(Main, Current.CustomAccent, hex => Change(s => s.CustomAccent = hex)));

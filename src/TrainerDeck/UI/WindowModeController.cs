@@ -6,6 +6,7 @@ internal sealed class WindowModeController
 {
     private readonly Window _window;
     private Rect? _restoreBounds;
+    private bool _wasMaximized;
 
     public WindowModeController(Window window) => _window = window;
 
@@ -15,9 +16,13 @@ internal sealed class WindowModeController
     {
         if (fullScreen)
         {
-            if (_window.WindowState == WindowState.Normal && _window.IsLoaded)
+            if (_window.IsLoaded && !IsFullScreen)
             {
-                _restoreBounds = new Rect(_window.Left, _window.Top, _window.Width, _window.Height);
+                _wasMaximized = _window.WindowState == WindowState.Maximized;
+                Rect normal = _window.WindowState == WindowState.Normal
+                    ? new Rect(_window.Left, _window.Top, _window.Width, _window.Height)
+                    : _window.RestoreBounds;
+                _restoreBounds = normal.IsEmpty ? null : normal;
             }
 
             _window.WindowState = WindowState.Normal;
@@ -36,6 +41,11 @@ internal sealed class WindowModeController
                 _window.Top = r.Top;
                 _window.Width = r.Width;
                 _window.Height = r.Height;
+            }
+
+            if (_wasMaximized)
+            {
+                _window.WindowState = WindowState.Maximized;
             }
         }
 

@@ -100,7 +100,7 @@ internal sealed class HidGamepad : IDisposable
                 : sony is not null ? sony.ToString()! : $"Gamepad {attrs.VendorId:X4}:{attrs.ProductId:X4}";
 
             var pad = new HidGamepad(path, name, sony, bluetooth, preparsed, caps, values);
-            keep = true; // pad owns preparsed data from here
+            keep = true;
             if (!pad.Start())
             {
                 pad.Dispose();

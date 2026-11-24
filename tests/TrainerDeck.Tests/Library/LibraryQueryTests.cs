@@ -86,7 +86,7 @@ public class LibraryQueryTests
         TrainerEntry[] entries = [E("Elden Ring", displayName: "Zzz Souls"), E("Baldur's Gate 3")];
         Assert.Equal(["Baldur's Gate 3", "Zzz Souls"], Names(LibraryQuery.Apply(entries, LibraryTab.All, SortMode.Alphabetical, null)));
         Assert.Single(LibraryQuery.Apply(entries, LibraryTab.All, SortMode.Alphabetical, "zzz"));
-        Assert.Single(LibraryQuery.Apply(entries, LibraryTab.All, SortMode.Alphabetical, "elden")); // original name still searchable
+        Assert.Single(LibraryQuery.Apply(entries, LibraryTab.All, SortMode.Alphabetical, "elden"));
     }
 
     [Fact]

@@ -8,9 +8,6 @@ using TrainerDeck.Core.Widget;
 
 namespace TrainerDeck.Install;
 
-// Installs the Xbox Game Bar widget package that build.ps1 embeds in the setup exe. The package is signed with a
-// self-signed certificate, so that certificate is added to the PC's Trusted People store first (which trusts only
-// packages signed with it, not anything it might issue).
 public static class WidgetInstaller
 {
     private const string ResourcePrefix = "Widget/";
@@ -18,7 +15,78 @@ public static class WidgetInstaller
 
     public static bool Available => Resources().Any(n => n.EndsWith(".msix", StringComparison.OrdinalIgnoreCase));
 
-    public static void Install(string userSid)
+    public static bool IsInstalled()
+    {
+        using RegistryKey? packages = Registry.CurrentUser.OpenSubKey(
+            @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
+        return packages?.GetSubKeyNames().Any(n => n.StartsWith(PackageIdentity.WidgetName + "_", StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
+    public static string? InstalledVersion()
+    {
+        using RegistryKey? packages = Registry.CurrentUser.OpenSubKey(
+            @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
+        string? name = packages?.GetSubKeyNames().FirstOrDefault(n => n.StartsWith(PackageIdentity.WidgetName + "_", StringComparison.OrdinalIgnoreCase));
+        return name?.Split('_') is { Length: > 1 } parts ? parts[1] : null;
+    }
+
+    public static string? ProtocolTarget()
+    {
+        using RegistryKey? command = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(ProtocolKey + @"\shell\open\command");
+        return command?.GetValue("") is string value && value.Split('"', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() is { } exe ? exe : null;
+    }
+
+    public const string CommandFlag = "--widget";
+
+    public static int RunCommand(string[] args, string exe)
+    {
+        string? Arg(string name)
+        {
+            int i = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+            return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+        }
+
+        string verb = args.Length > 1 ? args[1].ToLowerInvariant() : "";
+        string userSid = Arg("--install-user") ?? Installer.CurrentUserSid();
+        string? result = Arg("--result");
+        try
+        {
+            if (verb == "install")
+            {
+                Install(userSid, reinstall: true);
+                if (ProtocolTarget() is not { } target || !File.Exists(target))
+                {
+                    RegisterProtocol(exe);
+                }
+            }
+            else if (verb == "remove")
+            {
+                Uninstall();
+                if (string.Equals(ProtocolTarget(), exe, StringComparison.OrdinalIgnoreCase) && Installer.FindExisting() is null)
+                {
+                    UnregisterProtocol();
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"Unknown widget command “{verb}”.");
+            }
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Widget {verb} failed", ex);
+            if (result is not null)
+            {
+                File.WriteAllText(result, ex.Message);
+            }
+
+            return 1;
+        }
+    }
+
+    public static void Install(string userSid, bool reinstall = false)
     {
         string dir = Path.Combine(Path.GetTempPath(), "TrainerDeck-widget-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
@@ -35,9 +103,9 @@ public static class WidgetInstaller
             string deps = dependencies.Length == 0 ? "" : " -DependencyPath " + string.Join(",", dependencies.Select(Quote));
             string script = sameUser
                 ? $"$p = {Quote(package)}; " +
+                  (reinstall ? $"Get-AppxPackage -Name '{PackageIdentity.WidgetName}' | Remove-AppxPackage; " : "") +
                   $"try {{ Add-AppxPackage -Path $p{deps} -ForceApplicationShutdown -ForceUpdateFromAnyVersion -ErrorAction Stop }} " +
                   $"catch {{ Get-AppxPackage -Name '{PackageIdentity.WidgetName}' | Remove-AppxPackage; Add-AppxPackage -Path $p{deps} -ErrorAction Stop }}"
-                // Setup was elevated with another account: provision it so it installs for every user, including the right one.
                 : $"Add-AppxProvisionedPackage -Online -PackagePath {Quote(package)}{(dependencies.Length == 0 ? "" : " -DependencyPackagePath " + string.Join(",", dependencies.Select(Quote)))} -SkipLicense -ErrorAction Stop | Out-Null";
             RunPowerShell(script, "install the Game Bar widget");
             Log.Info($"Game Bar widget installed ({(sameUser ? "current user" : "provisioned for all users")}).");
@@ -76,7 +144,6 @@ public static class WidgetInstaller
         }
     }
 
-    // trainerdeck: links let the widget open Trainer Deck when it isn't running.
     public static void RegisterProtocol(string exe)
     {
         using RegistryKey key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).CreateSubKey(ProtocolKey);

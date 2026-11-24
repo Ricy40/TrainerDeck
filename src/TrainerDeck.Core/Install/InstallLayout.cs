@@ -31,6 +31,23 @@ public static class InstallLayout
         return p.StartsWith(d, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static int CompareVersions(string? installed, string current)
+    {
+        if (!Version.TryParse(current, out Version? mine))
+        {
+            return 0;
+        }
+
+        if (string.IsNullOrWhiteSpace(installed) || !Version.TryParse(installed, out Version? theirs))
+        {
+            return -1;
+        }
+
+        return Normalize(theirs).CompareTo(Normalize(mine));
+    }
+
+    private static Version Normalize(Version v) => new(v.Major, v.Minor, Math.Max(0, v.Build), Math.Max(0, v.Revision));
+
     public static IReadOnlyDictionary<string, object> UninstallValues(string targetDirectory, string version, long sizeKb)
     {
         string exe = Path.Combine(targetDirectory, ExeName);

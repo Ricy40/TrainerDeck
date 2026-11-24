@@ -85,6 +85,9 @@ public sealed class LaunchService : IDisposable
         }
     }
 
+    public Task<bool> WhenWindowReadyAsync(int pid) =>
+        pid == 0 ? Task.FromResult(false) : Tracker.WaitForWindowAsync(pid, WindowTimeout);
+
     public async Task<bool> FocusWhenReadyAsync(int pid)
     {
         if (pid == 0 || !await Tracker.WaitForWindowAsync(pid, WindowTimeout).ConfigureAwait(false))

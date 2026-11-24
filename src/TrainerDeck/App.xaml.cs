@@ -71,6 +71,13 @@ public partial class App : Application
             return;
         }
 
+        if (e.Args.Length >= 2 && e.Args[0].Equals(WidgetInstaller.CommandFlag, StringComparison.OrdinalIgnoreCase))
+        {
+            Log.Initialize(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TrainerDeck-setup.log"));
+            Shutdown(WidgetInstaller.RunCommand(e.Args, self));
+            return;
+        }
+
         if (e.Args.Length == 3 && e.Args[0].Equals(ImportTrainerFlag, StringComparison.OrdinalIgnoreCase))
         {
             TrainerImportResult import = TrainerImport.Import(e.Args[1], e.Args[2]);
@@ -103,6 +110,7 @@ public partial class App : Application
             if (Installer.StartViaTask())
             {
                 Log.Info("Started the administrator copy through Task Scheduler.");
+                BringOtherCopyToFront();
                 Shutdown();
                 return;
             }
@@ -147,17 +155,30 @@ public partial class App : Application
         window = new MainWindow(_main, settings);
         MainWindow = window;
         window.Show();
+        window.BringToFront();
         window.Activated += (_, _) => _launcher.ScanRunningInBackground();
         _instance.ActivationRequested += () => Dispatcher.BeginInvoke(() => ShowMainWindow(window));
         _tray = new TrayIcon(() => ShowMainWindow(window), () => _overlay?.Open(), ExitApp);
         window.Closing += (_, args) =>
         {
-            if (!_exiting && settings.Current.CloseButton == CloseButtonBehavior.Tray)
+            if (_exiting)
             {
-                args.Cancel = true;
-                HideToTray(window);
+                return;
+            }
+
+            switch (settings.Current.CloseButton)
+            {
+                case CloseButtonBehavior.Tray:
+                    args.Cancel = true;
+                    HideToTray(window);
+                    break;
+                case CloseButtonBehavior.Ask:
+                    args.Cancel = true;
+                    Dispatcher.BeginInvoke(() => AskHowToClose(window));
+                    break;
             }
         };
+        _main.CloseRequested += (_, _) => window.Close();
         window.HideToTrayRequested += (_, _) => HideToTray(window);
         window.ExitRequested += (_, _) => ExitApp();
         if (relaunchDeclined)
@@ -228,6 +249,17 @@ public partial class App : Application
         _controllers?.Wake();
     }
 
+    private void AskHowToClose(MainWindow window)
+    {
+        ShowMainWindow(window);
+        if (_main is null || _main.CurrentPage is CloseChoiceViewModel)
+        {
+            return;
+        }
+
+        _main.Push(new CloseChoiceViewModel(_main, () => HideToTray(window), ExitApp));
+    }
+
     private void ShowMainWindow(MainWindow window)
     {
         if (_tray is not null)
@@ -275,10 +307,10 @@ public partial class App : Application
             return;
         }
 
-        string? existing = testDir is null ? Installer.ExistingInstallDirectory() : null;
-        string target = testDir ?? existing ?? InstallLayout.DefaultTargetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+        ExistingInstall? existing = testDir is null ? Installer.FindExisting() : Installer.FindTestInstall(testDir);
+        string target = testDir ?? existing?.Directory ?? InstallLayout.DefaultTargetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
         new ThemeManager(null).Start();
-        var setup = new SetupWindow(target, userSid, systemIntegration: testDir is null, isUpdate: existing is not null);
+        var setup = new SetupWindow(target, userSid, systemIntegration: testDir is null, existing);
         MainWindow = setup;
         setup.Show();
     }
@@ -287,42 +319,33 @@ public partial class App : Application
     {
         Log.Initialize(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TrainerDeck-setup.log"));
         bool quiet = args.Any(a => a.Equals("--quiet", StringComparison.OrdinalIgnoreCase));
+        string userSid = ArgValue(args, "--install-user") ?? Installer.CurrentUserSid();
         if (!SingleInstance.IsElevated)
         {
-            ShellResult r = ShellLauncher.Run(Environment.ProcessPath!, string.Join(" ", args), null, "runas", IntPtr.Zero);
+            ShellResult r = ShellLauncher.Run(Environment.ProcessPath!, $"{string.Join(" ", args)} --install-user {userSid}", null, "runas", IntPtr.Zero);
             r.Process?.Dispose();
             Shutdown();
             return;
         }
 
         string target = AppContext.BaseDirectory.TrimEnd('\\');
-        bool keepTrainers = true;
         if (!quiet)
         {
-            MessageBoxResult answer = MessageBox.Show(
-                $"Remove Trainer Deck from {target}?\n\nYes: remove it and also delete the Trainers folder.\nNo: remove it but keep your Trainers folder.\n\nYour settings in %LOCALAPPDATA%\\TrainerDeck are kept.",
-                "Uninstall Trainer Deck", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.No);
-            if (answer == MessageBoxResult.Cancel)
-            {
-                Shutdown();
-                return;
-            }
-
-            keepTrainers = answer == MessageBoxResult.No;
+            new ThemeManager(null).Start();
+            var existing = Installer.FindExisting() ?? new ExistingInstall(target, Installer.Version);
+            var window = new SetupWindow(target, userSid, systemIntegration: true, existing, uninstallOnly: true);
+            MainWindow = window;
+            window.Show();
+            return;
         }
 
         try
         {
-            Installer.Uninstall(target, keepTrainers);
-            if (!quiet)
-            {
-                MessageBox.Show("Trainer Deck has been removed.", "Uninstall Trainer Deck", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            Installer.Uninstall(target, keepTrainers: true);
         }
         catch (Exception ex)
         {
             Log.Error("Uninstall failed", ex);
-            MessageBox.Show($"Uninstall failed: {ex.Message}", "Uninstall Trainer Deck", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         Shutdown();
@@ -336,6 +359,38 @@ public partial class App : Application
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool AllowSetForegroundWindow(int processId);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hwnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr hwnd);
+
+    private static void BringOtherCopyToFront()
+    {
+        int self = Environment.ProcessId;
+        DateTime deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcessesByName("TrainerDeck"))
+            {
+                using (p)
+                {
+                    IntPtr hwnd = p.Id == self ? IntPtr.Zero : p.MainWindowHandle;
+                    if (hwnd != IntPtr.Zero && IsWindowVisible(hwnd))
+                    {
+                        AllowSetForegroundWindow(p.Id);
+                        SetForegroundWindow(hwnd);
+                        return;
+                    }
+                }
+            }
+
+            Thread.Sleep(150);
+        }
+
+        Log.Warn("The administrator copy's window didn't appear in time to bring it to the front.");
+    }
 
     [System.Runtime.InteropServices.DllImport("kernel32.dll")]
     private static extern bool AttachConsole(int processId);

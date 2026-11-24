@@ -84,6 +84,58 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Maintenance choice: a Windows 11 Settings-style card -->
+        <Style x:Key="OptionCard" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="6" BorderThickness="1" Padding="16,12" MinHeight="68"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{TemplateBinding Tag}" FontFamily="{StaticResource IconFont}" FontSize="20" VerticalAlignment="Center"
+                                           Foreground="{TemplateBinding Foreground}" />
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,0" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Bd" Property="Padding" Value="15,11" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorTertiaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource AccentButton}">
+            <Setter Property="Background" Value="#C42B1C" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -97,13 +149,38 @@
             <Image x:Name="Logo" Width="48" Height="48" Margin="0,0,16,0" />
             <StackPanel VerticalAlignment="Center">
                 <TextBlock x:Name="Heading" Text="Install Trainer Deck" Style="{StaticResource TextTitle}" FontSize="24" />
-                <TextBlock x:Name="VersionText" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,0,0" />
+                <TextBlock x:Name="VersionText" Style="{StaticResource TextSecondary}" FontSize="13" Margin="0,2,0,0" MaxWidth="480" TextTrimming="CharacterEllipsis" />
             </StackPanel>
         </StackPanel>
 
-        <StackPanel x:Name="OptionsPanel" Grid.Row="1" Margin="32,28,32,0">
+        <!-- Existing install found: what to do -->
+        <StackPanel x:Name="MaintenancePanel" Grid.Row="1" Margin="32,24,32,0" Visibility="Collapsed">
+            <Button x:Name="UpdateCard" Style="{StaticResource OptionCard}" Tag="&#xE895;" Click="OnChooseUpdate">
+                <StackPanel>
+                    <TextBlock x:Name="UpdateTitle" Style="{StaticResource TextBase}" FontSize="15" />
+                    <TextBlock x:Name="UpdateDetail" Style="{StaticResource TextSecondary}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="RepairCard" Style="{StaticResource OptionCard}" Tag="&#xE90F;" Click="OnChooseRepair">
+                <StackPanel>
+                    <TextBlock Text="Repair" Style="{StaticResource TextBase}" FontSize="15" />
+                    <TextBlock x:Name="RepairDetail" Style="{StaticResource TextSecondary}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"
+                               Text="Reinstalls Trainer Deck and resets its shortcuts, the no-UAC start, the trainerdeck: link and the Game Bar widget. Settings and trainers are kept." />
+                </StackPanel>
+            </Button>
+            <Button x:Name="UninstallCard" Style="{StaticResource OptionCard}" Tag="&#xE74D;" Click="OnChooseUninstall">
+                <StackPanel>
+                    <TextBlock Text="Uninstall" Style="{StaticResource TextBase}" FontSize="15" />
+                    <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"
+                               Text="Removes Trainer Deck from this PC. You choose whether your trainers and settings go too." />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Install, update or repair options -->
+        <StackPanel x:Name="OptionsPanel" Grid.Row="1" Margin="32,24,32,0">
             <TextBlock Text="Install location" Style="{StaticResource TextBase}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
-            <DockPanel Margin="0,0,0,28">
+            <DockPanel Margin="0,0,0,24">
                 <Button x:Name="BrowseButton" DockPanel.Dock="Right" Style="{StaticResource FlatButton}" Height="36" Margin="8,0,0,0" Content="Change…" Click="OnBrowse" />
                 <Border Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1" CornerRadius="4" Height="36" Padding="12,0">
@@ -126,8 +203,26 @@
                                Text="Control your trainer's cheats from Game Bar (Xbox button or Win + G). Adds the widget's signing certificate to this PC's trusted people." />
                 </StackPanel>
             </CheckBox>
-            <TextBlock Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
+            <TextBlock x:Name="OptionsNote" Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
                        Text="Your trainers go in the Trainers folder inside the install location. Use “Add a trainer” in the app to copy them there." />
+        </StackPanel>
+
+        <!-- Uninstall choices -->
+        <StackPanel x:Name="UninstallPanel" Grid.Row="1" Margin="32,24,32,0" Visibility="Collapsed">
+            <TextBlock Style="{StaticResource TextSecondary}" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,24"
+                       Text="Removes the app, its shortcuts, the no-UAC start entry, the trainerdeck: link, and the Game Bar widget with its certificate." />
+            <CheckBox x:Name="DeleteTrainersCheck" Style="{StaticResource SetupCheck}">
+                <StackPanel>
+                    <TextBlock Text="Also delete the Trainers folder" TextWrapping="Wrap" />
+                    <TextBlock x:Name="TrainersDetail" Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0" />
+                </StackPanel>
+            </CheckBox>
+            <CheckBox x:Name="DeleteDataCheck" Style="{StaticResource SetupCheck}" IsChecked="True">
+                <StackPanel>
+                    <TextBlock Text="Also delete settings, library and art cache" TextWrapping="Wrap" />
+                    <TextBlock x:Name="DataDetail" Style="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0" />
+                </StackPanel>
+            </CheckBox>
         </StackPanel>
 
         <StackPanel x:Name="ProgressPanel" Grid.Row="1" Margin="32,40,32,0" Visibility="Collapsed">
@@ -138,10 +233,13 @@
         <!-- Command area, as in Windows 11 dialogs -->
         <Border Grid.Row="2" Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="0,1,0,0" Padding="24">
+            <DockPanel>
+            <Button x:Name="BackButton" DockPanel.Dock="Left" Style="{StaticResource FlatButton}" Content="Back" Click="OnBack" MinWidth="100" Visibility="Collapsed" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="CancelButton" Style="{StaticResource FlatButton}" Content="Cancel" Click="OnCancel" Margin="0,0,8,0" MinWidth="120" />
-                <Button x:Name="InstallButton" Style="{StaticResource AccentButton}" Content="Install" Click="OnInstall" MinWidth="120" IsDefault="True" />
+                <Button x:Name="InstallButton" Style="{StaticResource AccentButton}" Content="Install" Click="OnPrimary" MinWidth="120" IsDefault="True" />
             </StackPanel>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

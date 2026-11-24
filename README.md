@@ -89,8 +89,8 @@ The Ally X's back paddles can send keyboard keys, which is handy for trainer hot
 ## Launching
 
 - **Launch:** trainers start as administrator with their own folder as the working directory. Most trainers need admin rights, so Windows shows a UAC prompt. Cancelling it does nothing.
-- **After launch:** Trainer Deck brings the trainer's window to the front. Then it stays open, minimises (the default) or closes, per **Settings › After launching a trainer**.
-- **Running trainers:** a green **Running** badge shows on each one, including trainers you started another way. Press A on a running trainer to switch to it. **Close trainer** is on the details page (Y) and the right-click menu.
+- **After launch:** by default (**Stay in front**) the trainer opens behind Trainer Deck, so you never have to touch its window. **Settings › After launching a trainer** can instead bring the trainer forward and then minimise, close or hide Trainer Deck to the tray.
+- **Running trainers:** a green **Running** badge shows on each one, including trainers you started another way. Press A on a running trainer to open its Cheats page. To end a trainer, click the ✕ next to its **Running** badge, or use **Close trainer** on its Cheats page (also in the overlay and Game Bar widget), details page (Y) or right-click menu.
 - **Always run as administrator** (top of Settings; recommended): Trainer Deck asks for admin rights once when it starts, so trainers launch without a prompt each time. This also lets Close trainer work on any trainer. The trade-off is one UAC prompt every time Trainer Deck starts. Steam games are still started without admin rights.
 
 ## Card art
@@ -130,7 +130,7 @@ The overlay is a panel over your game with the running trainer's cheats. Navigat
 
 ### Xbox Game Bar widget
 
-The installer can add a **Trainer Deck** widget to Xbox Game Bar (tick **Xbox Game Bar widget** in setup). Press the Xbox button (or **Win + G**), open the widget menu and choose **Trainer Deck**. It shows the running trainer's cheats: **A** toggles or applies one, **d-pad left/right** steps a value. Pin it to keep the list on screen while you play.
+The installer can add a **Trainer Deck** widget to Xbox Game Bar (tick **Xbox Game Bar widget** in setup). Portable copies install it from **Settings › Overlay and Game Bar › Xbox Game Bar widget**, which also reinstalls or removes it (it asks for administrator permission once). Press the Xbox button (or **Win + G**), open the widget menu and choose **Trainer Deck**. It shows the running trainer's cheats: **A** toggles or applies one, **d-pad left/right** steps a value. Pin it to keep the list on screen while you play.
 
 The widget is a remote for Trainer Deck, so Trainer Deck has to be running (in a window or in the tray). If it isn't, the widget offers **Open Trainer Deck**.
 
@@ -145,7 +145,8 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 
 ## Running in the tray
 
-**Settings › Window › Close button** decides what the window's close button does:
+**Settings › Window › Close button** decides what closing the window does (its × button, the taskbar's Close window, Alt+F4, or the power button at the top right of the library):
+- **Ask every time** (default): choose between the tray and exiting, with **Remember my choice** to stop asking
 - **Exit Trainer Deck**
 - **Keep running in the tray:** while it's in the tray, the overlay shortcut, the overlay combo and cheat shortcuts keep working whenever a trainer is running. Click the tray icon to open the window again, or right-click it to open the overlay or exit.
 
@@ -198,6 +199,8 @@ dotnet test
 This creates two files in `publish\`:
 - `TrainerDeck.exe`: the portable app.
 - `TrainerDeck-Setup.exe`: the installer.
+
+`.\build.ps1 -Portable` builds only the portable `TrainerDeck.exe` into `publish\portable\` (no installer copy). It still carries the Game Bar widget, which **Settings › Xbox Game Bar widget** installs; add `-NoWidget` for a quicker build without it. In Rider, the **Build installer** and **Build portable** run configurations (in `.run\`) do the same.
 
 If Visual Studio's UWP tools are installed, `build.ps1` also builds the Game Bar widget, signs it and embeds it in both exes. The first run creates a self-signed **CN=Trainer Deck** signing certificate in `.signing\` (ignored by git). Keep a backup of that folder: widget updates must be signed with the same certificate, and a new one means setup has to replace the trust on each PC.
 

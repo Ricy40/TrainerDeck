@@ -44,6 +44,7 @@ public partial class MainWindow : Window
         if (settings.Current.StartFullScreen)
         {
             _mode.SetFullScreen(true);
+            vm.IsFullScreen = true;
         }
     }
 
@@ -89,6 +90,10 @@ public partial class MainWindow : Window
     {
         switch (behavior)
         {
+            case AfterLaunchBehavior.StayOpen:
+                Cheats.ForegroundGuard.GrantForeground();
+                BringToFront();
+                break;
             case AfterLaunchBehavior.Minimize:
                 WindowState = WindowState.Minimized;
                 break;
@@ -105,6 +110,7 @@ public partial class MainWindow : Window
     {
         bool full = !_mode.IsFullScreen;
         _mode.SetFullScreen(full);
+        _vm.IsFullScreen = full;
         _repaintBackdrop?.Invoke();
         _settings.Update(s => s.StartFullScreen = full);
     }

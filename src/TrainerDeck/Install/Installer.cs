@@ -16,7 +16,10 @@ public sealed record InstallOptions(
     bool DesktopShortcut,
     string UserSid,
     bool SystemIntegration = true,
-    bool GameBarWidget = false);
+    bool GameBarWidget = false,
+    bool Repair = false);
+
+public sealed record ExistingInstall(string Directory, string? Version);
 
 
 public static class Installer
@@ -35,13 +38,47 @@ public static class Installer
         return key?.GetValue("InstallLocation") as string is { Length: > 0 } dir && Directory.Exists(dir) ? dir : null;
     }
 
+    public static ExistingInstall? FindExisting()
+    {
+        using RegistryKey? key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(InstallLayout.UninstallKey);
+        return key?.GetValue("InstallLocation") as string is { Length: > 0 } dir && Directory.Exists(dir)
+            ? new ExistingInstall(dir, key.GetValue("DisplayVersion") as string)
+            : null;
+    }
+
+    public static ExistingInstall? FindTestInstall(string directory)
+    {
+        string marker = Path.Combine(directory, PortablePaths.InstallMarkerFile);
+        try
+        {
+            return File.Exists(marker) && JsonSerializer.Deserialize<InstallInfo>(File.ReadAllText(marker)) is { } info
+                ? new ExistingInstall(directory, info.Version)
+                : null;
+        }
+        catch (Exception ex) when (ex is IOException or JsonException)
+        {
+            return null;
+        }
+    }
+
+    public static bool HasDesktopShortcut => File.Exists(DesktopShortcut);
+
+    public static string UserDataDirectory(string userSid)
+    {
+        using RegistryKey? profile = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+            .OpenSubKey($@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\{userSid}");
+        string root = profile?.GetValue("ProfileImagePath") is string p && Directory.Exists(p)
+            ? Path.Combine(p, "AppData", "Local")
+            : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        return Path.Combine(root, "TrainerDeck");
+    }
+
     public static string CurrentUserSid()
     {
         using WindowsIdentity id = WindowsIdentity.GetCurrent();
         return id.User?.Value ?? "";
     }
 
-    // Returns a note for the user when an optional part (the Game Bar widget) couldn't be installed.
     public static string? Install(InstallOptions o, Action<string> progress)
     {
         string source = Environment.ProcessPath ?? throw new InvalidOperationException("Can't find the setup file.");
@@ -86,6 +123,7 @@ public static class Installer
         }
 
         WidgetInstaller.RegisterProtocol(exe);
+        RefreshShellIcons(exe);
 
         if (o.ElevatedTask)
         {
@@ -103,7 +141,7 @@ public static class Installer
             progress("Installing the Xbox Game Bar widget…");
             try
             {
-                WidgetInstaller.Install(o.UserSid);
+                WidgetInstaller.Install(o.UserSid, reinstall: o.Repair);
             }
             catch (Exception ex)
             {
@@ -120,11 +158,25 @@ public static class Installer
         return note;
     }
 
-    public static void Uninstall(string target, bool keepTrainers)
+    public static void Uninstall(string target, bool keepTrainers, string? dataDirectory = null, bool systemIntegration = true)
     {
         string exe = Path.Combine(target, InstallLayout.ExeName);
-        Log.Info($"Uninstall from {target} (keep trainers: {keepTrainers})");
+        Log.Info($"Uninstall from {target} (keep trainers: {keepTrainers}, remove data: {dataDirectory is not null})");
         StopRunningCopies(exe);
+        if (systemIntegration)
+        {
+            RemoveSystemIntegration(target);
+        }
+        else
+        {
+            TryDelete(Path.Combine(target, PortablePaths.InstallMarkerFile));
+        }
+
+        RemoveFilesAfterExit(target, keepTrainers, dataDirectory);
+    }
+
+    private static void RemoveSystemIntegration(string target)
+    {
         DeleteTask();
         RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).DeleteSubKeyTree(InstallLayout.UninstallKey, throwOnMissingSubKey: false);
         TryDelete(StartMenuShortcut);
@@ -132,11 +184,19 @@ public static class Installer
         TryDelete(Path.Combine(target, PortablePaths.InstallMarkerFile));
         WidgetInstaller.UnregisterProtocol();
         WidgetInstaller.Uninstall();
+    }
 
-        string tail = keepTrainers
-            ? $"del /f /q \"{exe}\" & rmdir \"{target}\""
-            : $"rmdir /s /q \"{target}\"";
-        Process.Start(new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 3 > nul & {tail}")
+    private static void RemoveFilesAfterExit(string target, bool keepTrainers, string? dataDirectory)
+    {
+        static string Q(string path) => "'" + path.Replace("'", "''") + "'";
+        string removeApp = keepTrainers
+            ? $"Get-ChildItem -LiteralPath {Q(target)} -Force | Where-Object Name -ne 'Trainers' | Remove-Item -Recurse -Force; " +
+              $"if (-not (Get-ChildItem -LiteralPath {Q(target)} -Force)) {{ Remove-Item -LiteralPath {Q(target)} -Force }}"
+            : $"Remove-Item -LiteralPath {Q(target)} -Recurse -Force";
+        string removeData = dataDirectory is null ? "" : $"; Remove-Item -LiteralPath {Q(dataDirectory)} -Recurse -Force";
+        string script = $"Wait-Process -Id {Environment.ProcessId} -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; " +
+                        $"$ErrorActionPreference = 'SilentlyContinue'; {removeApp}{removeData}";
+        Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command \"{script}\"")
         {
             CreateNoWindow = true,
             UseShellExecute = false,
@@ -245,6 +305,26 @@ public static class Installer
             }
         }
     }
+
+    private static void RefreshShellIcons(string exe)
+    {
+        const uint updateItem = 0x00002000;
+        const uint assocChanged = 0x08000000;
+        const uint pathW = 0x0005;
+        const uint idList = 0x0000;
+        foreach (string path in new[] { exe, StartMenuShortcut, DesktopShortcut }.Where(File.Exists))
+        {
+            SHChangeNotify(updateItem, pathW, path, IntPtr.Zero);
+        }
+
+        SHChangeNotify(assocChanged, idList, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern void SHChangeNotify(uint eventId, uint flags, string item1, IntPtr item2);
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll")]
+    private static extern void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
 
     private static void TryDelete(string path)
     {

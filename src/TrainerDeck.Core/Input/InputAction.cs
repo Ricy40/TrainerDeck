@@ -24,6 +24,7 @@ public enum InputAction
     LetterRail,
     LetterRailEnd,
     ParentFolder,
+    CloseTrainer,
 }
 
 public enum InputSource

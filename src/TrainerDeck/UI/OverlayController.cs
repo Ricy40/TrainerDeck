@@ -249,7 +249,7 @@ public sealed class OverlayController : IDisposable
             return;
         }
 
-        uint mods = 0x4000; // MOD_NOREPEAT
+        uint mods = 0x4000;
         if (_hotkey.Modifiers.HasFlag(HotkeyModifiers.Alt))
         {
             mods |= 0x1;

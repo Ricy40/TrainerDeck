@@ -148,10 +148,33 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <Border Background="{DynamicResource RunningBrush}" CornerRadius="4" Padding="7,2,7,3" Margin="0,6,0,0" HorizontalAlignment="Left"
-                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="12" FontWeight="Bold" Foreground="#05210F" />
-                    </Border>
+                    <!-- Running: badge plus a close button, so a trainer can be ended without touching its window -->
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0" HorizontalAlignment="Left"
+                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
+                        <Border Background="{DynamicResource RunningBrush}" CornerRadius="4" Padding="7,2,7,3" VerticalAlignment="Center">
+                            <TextBlock Text="Running" Style="{StaticResource TextBase}" FontSize="12" FontWeight="Bold" Foreground="#05210F" />
+                        </Border>
+                        <Button Focusable="False" Cursor="Hand" Margin="4,0,0,0" ToolTip="Close trainer"
+                                Command="{Binding DataContext.CloseTrainerCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                CommandParameter="{Binding}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd" Background="{StaticResource BadgeBrush}" CornerRadius="4" Width="24" Height="22">
+                                        <TextBlock x:Name="X" Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource OnImageTextBrush}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#C42B1C" />
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Bd" Property="Opacity" Value="0.8" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
             <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" IsHitTestVisible="False" />

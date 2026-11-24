@@ -226,7 +226,7 @@ public sealed class TrainerLibrary : IDisposable
     private void OnFileSystemEvent(object sender, FileSystemEventArgs e)
     {
         string ext = Path.GetExtension(e.FullPath);
-        bool relevant = ext.Length == 0 // probably a directory
+        bool relevant = ext.Length == 0
             || ext.Equals(".exe", StringComparison.OrdinalIgnoreCase)
             || ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)
             || (e is RenamedEventArgs r && Path.GetExtension(r.OldFullPath).Equals(".exe", StringComparison.OrdinalIgnoreCase));

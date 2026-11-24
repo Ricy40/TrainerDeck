@@ -19,7 +19,7 @@ public class InputRouterTests
         var r = Router();
         Assert.Equal([InputAction.Activate], r.Update(GamepadButtons.A, Ms(0)));
         Assert.Empty(r.Update(GamepadButtons.A, Ms(16)));
-        Assert.Empty(r.Update(GamepadButtons.A, Ms(2000))); // A never repeats
+        Assert.Empty(r.Update(GamepadButtons.A, Ms(2000)));
         Assert.Empty(r.Update(GamepadButtons.None, Ms(2016)));
         Assert.Equal([InputAction.Activate], r.Update(GamepadButtons.A, Ms(2032)));
     }
@@ -155,7 +155,7 @@ public class StickDigitizerTests
     [InlineData(0.1f, 0.9f, GamepadButtons.StickUp)]
     [InlineData(0f, -0.55f, GamepadButtons.StickDown)]
     [InlineData(0.45f, 0.3f, GamepadButtons.None)]
-    [InlineData(0.7f, 0.69f, GamepadButtons.StickRight)] // dominant axis only
+    [InlineData(0.7f, 0.69f, GamepadButtons.StickRight)]
     public void Deadzone_and_dominant_axis(float x, float y, GamepadButtons expected) =>
         Assert.Equal(expected, new StickDigitizer().Digitize(Stick(x, y)));
 

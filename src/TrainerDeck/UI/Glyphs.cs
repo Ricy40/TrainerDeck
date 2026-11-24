@@ -33,5 +33,6 @@ public static class Glyphs
     public const string Brightness = "";
     public const string Power = "";
     public const string Rocket = "";
+    public const string Minimize = "";
     public const string Color = "";
 }
