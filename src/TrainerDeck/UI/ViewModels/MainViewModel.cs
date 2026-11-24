@@ -229,6 +229,10 @@ public sealed partial class MainViewModel : ObservableObject
         Push(new FileBrowserViewModel(this, "Add a trainer", DownloadsFolder, folderMode: false,
             path => _ = ImportTrainerAsync(path, dest), TrainerImport.Extensions)
         {
+            OptionLabel = "Delete the original after adding",
+            OptionDetail = "Moves the trainer instead of copying it, so only the one in your trainer folder is left",
+            OptionOn = Settings.Current.DeleteOriginalAfterAdding,
+            OptionChanged = v => Settings.Update(s => s.DeleteOriginalAfterAdding = v),
             Body = $"Pick a trainer .exe or .zip. It's copied to {dest}; zips are extracted.",
         });
     }
@@ -236,16 +240,21 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task ImportTrainerAsync(string source, string destination)
     {
         string name = System.IO.Path.GetFileName(source);
+        bool deleteOriginal = Settings.Current.DeleteOriginalAfterAdding;
         ShowMessage($"Adding {name}…");
-        TrainerImportResult result = await Task.Run(() => TrainerImport.Import(source, destination));
+        TrainerImportResult result = await Task.Run(() => TrainerImport.Import(source, destination, new TrainerImportOptions(DeleteOriginal: deleteOriginal)));
         if (!result.Success && result.AccessDenied && !Services.IsElevated)
         {
-            result = await ImportElevatedAsync(source, destination);
+            result = await ImportElevatedAsync(source, destination, deleteOriginal);
         }
 
-        if (result.Success)
+        if (result.Duplicate)
         {
-            ShowMessage($"Added {name}");
+            ShowMessage($"{name} is already in your library");
+        }
+        else if (result.Success)
+        {
+            ShowMessage(deleteOriginal && !System.IO.File.Exists(source) ? $"Added {name} and deleted the original" : $"Added {name}");
             _ = Services.Library.RescanAsync();
         }
         else
@@ -254,7 +263,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    private static async Task<TrainerImportResult> ImportElevatedAsync(string source, string destination)
+    private static async Task<TrainerImportResult> ImportElevatedAsync(string source, string destination, bool deleteOriginal)
     {
         string? exe = Environment.ProcessPath;
         if (exe is null)
@@ -262,7 +271,7 @@ public sealed partial class MainViewModel : ObservableObject
             return new TrainerImportResult(false, null, "access denied");
         }
 
-        ShellResult r = await ShellLauncher.RunAsync(exe, $"{App.ImportTrainerFlag} \"{source}\" \"{destination}\"", null, "runas", IntPtr.Zero);
+        ShellResult r = await ShellLauncher.RunAsync(exe, $"{App.ImportTrainerFlag} \"{source}\" \"{destination}\"{(deleteOriginal ? " --delete-original" : "")}", null, "runas", IntPtr.Zero);
         if (r.Error == Core.Launch.LaunchErrors.Cancelled)
         {
             return new TrainerImportResult(false, null, "administrator permission was declined");
@@ -276,7 +285,12 @@ public sealed partial class MainViewModel : ObservableObject
         using (process)
         {
             int? code = await LaunchNative.WaitForExitAsync(process, TimeSpan.FromMinutes(2));
-            return code == 0 ? new TrainerImportResult(true, destination, null) : new TrainerImportResult(false, null, "the copy failed");
+            return code switch
+            {
+                0 => new TrainerImportResult(true, destination, null),
+                TrainerImport.ExitDuplicate => new TrainerImportResult(false, null, "It's already in your trainer folder.", Duplicate: true),
+                _ => new TrainerImportResult(false, null, "the copy failed"),
+            };
         }
     }
 

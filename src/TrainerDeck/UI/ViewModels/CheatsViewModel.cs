@@ -278,7 +278,7 @@ public sealed class CheatsViewModel : RowListPageViewModel
         switch (result)
         {
             case TriggerResult.Toggled:
-                await Task.Delay(120);
+                await Task.Delay(300);
                 await PollStates();
                 if (!row.Option.IsToggle)
                 {

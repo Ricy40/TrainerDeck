@@ -79,6 +79,7 @@ public partial class LibraryView : UserControl, IPageView
         if (_vm is not null)
         {
             _vm.PropertyChanged += OnVmPropertyChanged;
+            _vm.SearchRequested += (_, _) => FocusSearch();
         }
     }
 
@@ -155,15 +156,16 @@ public partial class LibraryView : UserControl, IPageView
 
         _vm.Selected = card;
         var menu = new ContextMenu { PlacementTarget = item, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
-        menu.Items.Add(MenuItem(card.IsRunning ? "Cheats" : "Launch", "", _vm.ActivateCommand, card));
+        menu.Items.Add(MenuItem("Open", "\uE8A7", _vm.ActivateCommand, card));
+        menu.Items.Add(MenuItem(card.IsRunning ? "Cheats" : "Launch", card.IsRunning ? "\uE7FC" : "\uE768", _vm.LaunchCommand, card));
         if (card.IsRunning)
         {
-            menu.Items.Add(MenuItem("Close trainer", "", _vm.CloseTrainerCommand, card));
+            menu.Items.Add(MenuItem("Close trainer", "\uE711", _vm.CloseTrainerCommand, card));
         }
 
-        menu.Items.Add(MenuItem(card.IsFavourite ? "Remove from favourites" : "Add to favourites", card.IsFavourite ? "" : "", _vm.ToggleFavouriteCommand, card));
-        menu.Items.Add(MenuItem("Details", "", _vm.OpenDetailsCommand, card));
-        menu.Items.Add(MenuItem("Show in folder", "", _vm.ShowInFolderCommand, card));
+        menu.Items.Add(MenuItem(card.IsFavourite ? "Remove from favourites" : "Add to favourites", card.IsFavourite ? "\uE735" : "\uE734", _vm.ToggleFavouriteCommand, card));
+        menu.Items.Add(MenuItem("Show in folder", "\uE838", _vm.ShowInFolderCommand, card));
+        menu.Items.Add(MenuItem(card.HasVersions ? "Delete this version…" : "Delete trainer…", "\uE74D", _vm.ConfirmDeleteCommand, card));
         menu.IsOpen = true;
         e.Handled = true;
     }
@@ -194,7 +196,7 @@ public partial class LibraryView : UserControl, IPageView
         if (e.ChangedButton == MouseButton.Left
             && ItemsControl.ContainerFromElement(CardList, e.OriginalSource as DependencyObject) is ListBoxItem { DataContext: TrainerCardViewModel card })
         {
-            _ = _vm?.Activate(card);
+            _ = _vm?.Launch(card);
         }
     }
 }

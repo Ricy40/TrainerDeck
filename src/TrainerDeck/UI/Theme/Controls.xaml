@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
     <!-- Text -->
     <Style x:Key="TextBase" TargetType="TextBlock">
@@ -110,6 +111,14 @@
                         <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Tag">
+                            <Trigger.Value>
+                                <sys:Boolean>True</sys:Boolean>
+                            </Trigger.Value>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
                         </Trigger>
@@ -150,6 +159,14 @@
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Tag">
+                            <Trigger.Value>
+                                <sys:Boolean>True</sys:Boolean>
+                            </Trigger.Value>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />

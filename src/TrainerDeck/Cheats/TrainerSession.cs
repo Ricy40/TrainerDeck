@@ -102,15 +102,22 @@ public sealed partial class TrainerSession
             return false;
         }
 
-        if (toggle.TryGetCurrentPattern(TogglePattern.Pattern, out object p))
+        IntPtr hwnd = new(toggle.Current.NativeWindowHandle);
+        if (hwnd != IntPtr.Zero)
         {
-            ForegroundGuard.Keep(() => { ((TogglePattern)p).Toggle(); return true; });
+            ForegroundGuard.Keep(() => SendMessage(hwnd, BmClick, IntPtr.Zero, IntPtr.Zero));
             return true;
         }
 
         if (toggle.TryGetCurrentPattern(InvokePattern.Pattern, out object i))
         {
             ForegroundGuard.Keep(() => { ((InvokePattern)i).Invoke(); return true; });
+            return true;
+        }
+
+        if (toggle.TryGetCurrentPattern(TogglePattern.Pattern, out object p))
+        {
+            ForegroundGuard.Keep(() => { ((TogglePattern)p).Toggle(); return true; });
             return true;
         }
 
@@ -384,6 +391,11 @@ public sealed partial class TrainerSession
 
     [GeneratedRegex(@"\b(Hp|Fp|Xp|Sp|Mp|Ai|Npc|Ui|Ok|Dlc|\d+[Xx])\b")]
     private static partial Regex KeepUpper();
+
+    private const int BmClick = 0x00F5;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 
     private sealed record Live(CheatOption Option, AutomationElement? Toggle, AutomationElement? ValueBox, AutomationElement? Combo);
 }

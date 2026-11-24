@@ -84,14 +84,14 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
             return;
         }
 
-        if (_s.Library.Entries.FirstOrDefault(e => e.Id == Card.Id) is not TrainerEntry fresh)
+        if (!_s.Library.Entries.Any(e => GameGroup.KeyFor(e) == Card.Group.Key && !e.Meta.Hidden))
         {
             Main.ShowMessage($"{Card.Title} is no longer in your trainer folders.");
             Main.PopTo(Main.Library);
             return;
         }
 
-        Card.Refresh(fresh);
+        Main.Library.Regroup(Card);
         Rebuild();
     }
 
@@ -111,7 +111,8 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
         }
         else
         {
-            rows.Add(new ActionRow("Launch trainer", Glyphs.Play, () => _ = Main.Library.Activate(Card), "Launch"));
+            rows.Add(new ActionRow("Launch trainer", Glyphs.Play, () => _ = Main.Library.Launch(Card), "Launch",
+                Card.HasVersions ? $"Default version: {GameGroup.Describe(Card.Group.Default)}" : null));
         }
 
         if (steamInstalled)
@@ -122,7 +123,25 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
 
         if (running)
         {
-            rows.Add(new ActionRow("Close trainer", Glyphs.Close, () => _ = Main.Library.CloseTrainer(Card), "Close"));
+            rows.Add(new ActionRow("Close trainer", Glyphs.Close, () => _ = Main.Library.CloseTrainer(Card), "Close") { IsDanger = true });
+        }
+
+        if (Card.HasVersions)
+        {
+            rows.Add(new HeaderRow("Versions"));
+            foreach (TrainerEntry v in Card.Versions)
+            {
+                bool isDefault = v.Id == Card.Group.Default.Id;
+                bool isRunning = _s.Launcher.Running.IsRunning(v.Id);
+                string detail = string.Join("  ·  ", new[] { isDefault ? "Default" : null, isRunning ? "Running" : null, v.File.FileName }
+                    .Where(x => x is not null));
+                TrainerEntry version = v;
+                rows.Add(new ActionRow(GameGroup.Describe(v), isDefault ? Glyphs.Check : Glyphs.Document,
+                    () => MakeDefault(version), isDefault ? "Default" : "Use by default", detail,
+                    () => ConfirmDelete(version), "Delete"));
+            }
+
+            rows.Add(new HeaderRow("Game"));
         }
 
         rows.Add(new ActionRow(m.Favourite ? "Remove from favourites" : "Add to favourites", m.Favourite ? Glyphs.StarFill : Glyphs.Star,
@@ -144,10 +163,16 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
 
         rows.Add(new ActionRow(m.Hidden ? "Show in library" : "Hide from library", m.Hidden ? Glyphs.View : Glyphs.Hide, ToggleHidden,
             m.Hidden ? "Unhide" : "Hide") { IsDanger = !m.Hidden });
+        rows.Add(new ActionRow(Card.HasVersions ? "Delete this version" : "Delete trainer", Glyphs.Delete, () => ConfirmDelete(Entry), "Delete",
+            $"{Entry.File.FileName}  ·  moves it to the Recycle Bin") { IsDanger = true });
 
         Title = Entry.DisplayName;
-        Subtitle = string.Join("  ·  ", new[] { Entry.File.Parsed.Version, Card.OptionsBadge is string o ? $"{o} options" : null }
-            .Where(x => !string.IsNullOrEmpty(x)));
+        Subtitle = string.Join("  ·  ", new[]
+            {
+                Entry.File.Parsed.Version,
+                Card.OptionsBadge is string o ? $"{o} options" : null,
+                Card.HasVersions ? $"{Card.Versions.Count} versions" : null,
+            }.Where(x => !string.IsNullOrEmpty(x)));
         Info = BuildInfo(m);
         SetRows(rows);
         HintsChanged();
@@ -175,6 +200,26 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
     {
         ImageSource? image = await _s.Art.GetHeroAsync(Entry);
         Hero = image;
+    }
+
+    private void MakeDefault(TrainerEntry version)
+    {
+        if (version.Id == Card.Group.Default.Id)
+        {
+            return;
+        }
+
+        Main.Library.MakeDefault(Card, version);
+        Main.ShowMessage($"{GameGroup.Describe(version)} is now the default");
+        Rebuild();
+    }
+
+    private void ConfirmDelete(TrainerEntry version)
+    {
+        string what = Card.HasVersions ? $"this version of {Card.Title}" : Card.Title;
+        Main.Push(new ConfirmViewModel(Main, $"Delete {what}?",
+            $"{version.File.FileName} goes to the Recycle Bin, so you can restore it from there.",
+            "Delete", Glyphs.Delete, () => _ = Main.Library.DeleteTrainer(version)));
     }
 
     private void PlayGame(int appId)
@@ -206,7 +251,10 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
         string name = RenameText.Trim();
         IsRenaming = false;
         string? value = name.Length == 0 || name == Entry.File.Parsed.GameName ? null : name;
-        _s.Library.UpdateMetadata(Card.Id, m => m.DisplayName = value);
+        foreach (TrainerEntry v in Card.Versions)
+        {
+            _s.Library.UpdateMetadata(v.Id, m => m.DisplayName = value);
+        }
         Main.ShowMessage(value is null ? "Name reset to the detected name" : $"Renamed to {value}");
         _ = _s.Steam.RefreshAsync();
         HintsChanged();
@@ -221,7 +269,10 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
             {
                 string relative = _s.Art.ImportCustomArt(path, Card.Id);
                 _s.Art.DeleteCustomArt(Entry);
-                _s.Library.UpdateMetadata(Card.Id, m => m.ArtPath = relative);
+                foreach (TrainerEntry v in Card.Versions)
+                {
+                    _s.Library.UpdateMetadata(v.Id, m => m.ArtPath = relative);
+                }
                 Card.ReloadCover(_s.Art, Main.Dispatcher);
                 Main.ShowMessage("Art updated");
             }
@@ -236,7 +287,10 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
     private void ResetArt()
     {
         _s.Art.DeleteCustomArt(Entry);
-        _s.Library.UpdateMetadata(Card.Id, m => m.ArtPath = null);
+        foreach (TrainerEntry v in Card.Versions)
+        {
+            _s.Library.UpdateMetadata(v.Id, m => m.ArtPath = null);
+        }
         Card.ReloadCover(_s.Art, Main.Dispatcher);
         Main.ShowMessage("Using the default art again");
     }
@@ -253,7 +307,10 @@ public sealed partial class DetailsViewModel : RowListPageViewModel
     private void ToggleHidden()
     {
         bool hide = !Entry.Meta.Hidden;
-        _s.Library.UpdateMetadata(Card.Id, m => m.Hidden = hide);
+        foreach (TrainerEntry v in Card.Versions)
+        {
+            _s.Library.UpdateMetadata(v.Id, m => m.Hidden = hide);
+        }
         if (hide)
         {
             Main.ShowMessage($"{Entry.DisplayName} is hidden. Unhide it from Settings › Hidden trainers.");

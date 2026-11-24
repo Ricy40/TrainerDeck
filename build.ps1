@@ -1,7 +1,8 @@
 # Builds Trainer Deck into .\publish. Both are the same single-file program:
-#   TrainerDeck-Setup.exe         named "Setup", it installs itself into Program Files
-#   Trainer Deck\TrainerDeck.exe  the portable copy: runs from its folder and keeps its data there
-#   TrainerDeck-Portable.zip      that folder, zipped for sharing
+#   TrainerDeck-vX.Y.Z-setup.exe     named "setup", it installs itself into Program Files
+#   Trainer Deck\TrainerDeck.exe     the portable copy: runs from its folder and keeps its data there
+#   TrainerDeck-vX.Y.Z-portable.zip  that folder, zipped for sharing
+# X.Y.Z is the <Version> in Directory.Build.props.
 #
 # With Visual Studio's UWP tools installed (in Build Tools for Visual Studio 2022: the WinUI workload with its
 # optional Universal Windows Platform tools), it also builds the
@@ -95,12 +96,16 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     Start-Sleep -Seconds 5
 }
 
+$version = ([xml](Get-Content (Join-Path $PSScriptRoot "Directory.Build.props") -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+if (-not $version) { throw "No <Version> in Directory.Build.props." }
 $portableDir = Join-Path $Out "Trainer Deck"
-$portableZip = Join-Path $Out "TrainerDeck-Portable.zip"
-Remove-Item $portableDir, $portableZip, (Join-Path $Out "TrainerDeck-Portable.exe") -Recurse -Force -ErrorAction SilentlyContinue
+$setupExe = Join-Path $Out "TrainerDeck-v$version-setup.exe"
+$portableZip = Join-Path $Out "TrainerDeck-v$version-portable.zip"
+Remove-Item $portableDir -Recurse -Force -ErrorAction SilentlyContinue
+Get-ChildItem $Out -File | Where-Object { $_.Name -like "TrainerDeck-*setup.exe" -or $_.Name -like "TrainerDeck-*portable.*" } | Remove-Item -Force
 New-Item -ItemType Directory -Force $portableDir | Out-Null
 Move-Item (Join-Path $Out "TrainerDeck.exe") (Join-Path $portableDir "TrainerDeck.exe") -Force
-Copy-Item (Join-Path $portableDir "TrainerDeck.exe") (Join-Path $Out "TrainerDeck-Setup.exe") -Force
+Copy-Item (Join-Path $portableDir "TrainerDeck.exe") $setupExe -Force
 # Entries are written by hand so the zip uses standard "/" paths (Windows PowerShell's zip helpers write "\").
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::Open($portableZip, [IO.Compression.ZipArchiveMode]::Create)

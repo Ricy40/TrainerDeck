@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using TrainerDeck.Art;
 using TrainerDeck.Core.Diagnostics;
 using TrainerDeck.Core.Input;
+using TrainerDeck.UI.Input;
 using TrainerDeck.Core.Launch;
 using TrainerDeck.Core.Settings;
 using TrainerDeck.Core.Library;
@@ -35,14 +36,14 @@ public sealed partial class LibraryViewModel : PageViewModel
         _art.Steam.Changed += (_, _) => _dispatcher.BeginInvoke(ReloadCovers);
         main.Services.Cheats.CoverCaptured += id => _dispatcher.BeginInvoke(() =>
         {
-            if (_cards.TryGetValue(id, out TrainerCardViewModel? card))
+            foreach (TrainerCardViewModel card in AllCards().Where(c => c.Id == id))
             {
                 card.ReloadCover(_art, _dispatcher);
             }
         });
         _art.GenericIconsChanged += (_, _) => _dispatcher.BeginInvoke(() =>
         {
-            foreach (TrainerCardViewModel card in _cards.Values)
+            foreach (TrainerCardViewModel card in AllCards())
             {
                 card.IsGenericIcon = card.IconFingerprint is string fp && _art.IsGenericIcon(fp);
             }
@@ -88,7 +89,7 @@ public sealed partial class LibraryViewModel : PageViewModel
 
     public TrainerCardViewModel? CardFor(string id)
     {
-        if (_cards.TryGetValue(id, out TrainerCardViewModel? card))
+        if (AllCards().FirstOrDefault(c => c.Id == id) is { } card)
         {
             return card;
         }
@@ -100,14 +101,18 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
 
         card = new TrainerCardViewModel(entry);
-        _cards[id] = card;
+        _single[id] = card;
         card.EnsureArt(_art, _dispatcher);
         return card;
     }
 
+    private readonly Dictionary<string, TrainerCardViewModel> _single = new(StringComparer.Ordinal);
+
+    private IEnumerable<TrainerCardViewModel> AllCards() => _cards.Values.Concat(_single.Values);
+
     private void ReloadCovers()
     {
-        foreach (TrainerCardViewModel card in _cards.Values)
+        foreach (TrainerCardViewModel card in AllCards())
         {
             card.ReloadCover(_art, _dispatcher);
         }
@@ -177,11 +182,102 @@ public sealed partial class LibraryViewModel : PageViewModel
     ]
     : LibraryHints();
 
+    public static readonly string[] HeaderItems =
+        ["all", "favourites", "recent", "search", "sort", "rescan", "add", "folder", "settings", "fullscreen", "close"];
+
+    [ObservableProperty]
+    private string? headerFocus;
+
+    partial void OnHeaderFocusChanged(string? value) => HintsChanged();
+
+    public event EventHandler? SearchRequested;
+
+    private bool HandleHeader(InputAction action)
+    {
+        int i = Math.Max(0, Array.IndexOf(HeaderItems, HeaderFocus));
+        switch (action)
+        {
+            case InputAction.Left:
+                HeaderFocus = HeaderItems[Math.Max(0, i - 1)];
+                return true;
+            case InputAction.Right:
+                HeaderFocus = HeaderItems[Math.Min(HeaderItems.Length - 1, i + 1)];
+                return true;
+            case InputAction.Up:
+                return true;
+            case InputAction.Down or InputAction.Back:
+                HeaderFocus = null;
+                return true;
+            case InputAction.Activate:
+                RunHeaderItem(HeaderItems[i]);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void RunHeaderItem(string item)
+    {
+        switch (item)
+        {
+            case "all":
+                Tab = LibraryTab.All;
+                break;
+            case "favourites":
+                Tab = LibraryTab.Favourites;
+                break;
+            case "recent":
+                Tab = LibraryTab.Recent;
+                break;
+            case "search":
+                HeaderFocus = null;
+                if (_main.LastDevice == InputSource.Controller)
+                {
+                    TouchKeyboard.Show();
+                }
+
+                SearchRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case "sort":
+                CycleSort();
+                break;
+            case "rescan":
+                RescanCommand.Execute(null);
+                break;
+            case "add":
+                AddTrainer();
+                break;
+            case "folder":
+                OpenFolder();
+                break;
+            case "settings":
+                OpenSettings();
+                break;
+            case "fullscreen":
+                _main.ToggleFullScreenCommand.Execute(null);
+                break;
+            case "close":
+                _main.RequestCloseCommand.Execute(null);
+                break;
+        }
+    }
+
     private FooterHint[] LibraryHints()
     {
+        if (HeaderFocus is not null)
+        {
+            return
+            [
+                new(InputAction.Activate, "Select", Primary: true),
+                new(InputAction.Left, "Move"),
+                new(InputAction.Back, "Back to games"),
+            ];
+        }
+
         var hints = new List<FooterHint>
         {
-            new(InputAction.Activate, Selected?.IsRunning == true ? "Cheats" : "Launch", Primary: true),
+            new(InputAction.Activate, "Open", Primary: true),
+            new(InputAction.Details, Selected?.IsRunning == true ? "Cheats" : "Launch", Primary: true),
         };
         if (Selected?.IsRunning == true && !HasSearch)
         {
@@ -189,7 +285,6 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
 
         hints.Add(new(InputAction.Favourite, Selected?.IsFavourite == true ? "Unfavourite" : "Favourite"));
-        hints.Add(new(InputAction.Details, "Details"));
         hints.Add(new(InputAction.NextTab, "Switch tab", "Tab · hold for A–Z"));
         hints.Add(new(InputAction.Sort, "Sort"));
         hints.Add(HasSearch ? new(InputAction.Back, "Clear search") : new(InputAction.Settings, "Settings"));
@@ -238,6 +333,17 @@ public sealed partial class LibraryViewModel : PageViewModel
             return HandleRail(action);
         }
 
+        if (HeaderFocus is not null && HandleHeader(action))
+        {
+            return true;
+        }
+
+        if (action == InputAction.Up && (Items.Count == 0 || Selected is null || Items.IndexOf(Selected) < Math.Max(1, Columns)))
+        {
+            HeaderFocus = Tab switch { LibraryTab.Favourites => "favourites", LibraryTab.Recent => "recent", _ => "all" };
+            return true;
+        }
+
         switch (action)
         {
             case InputAction.Up or InputAction.Down or InputAction.Left or InputAction.Right
@@ -245,17 +351,13 @@ public sealed partial class LibraryViewModel : PageViewModel
                 MoveSelection(action);
                 return true;
             case InputAction.Activate:
-                _ = Activate(Selected);
+                Activate(Selected);
                 return true;
             case InputAction.Favourite:
                 ToggleFavourite(Selected);
                 return true;
             case InputAction.Details:
-                if (Selected is not null)
-                {
-                    _main.OpenDetails(Selected);
-                }
-
+                _ = Launch(Selected);
                 return true;
             case InputAction.NextTab:
                 Tab = (LibraryTab)(((int)Tab + 1) % 3);
@@ -430,7 +532,19 @@ public sealed partial class LibraryViewModel : PageViewModel
     }
 
     [RelayCommand]
-    public async Task Activate(TrainerCardViewModel? card)
+    public void Activate(TrainerCardViewModel? card)
+    {
+        if (card is not null)
+        {
+            Selected = card;
+            _main.OpenDetails(card);
+        }
+    }
+
+    [RelayCommand]
+    public async Task Launch(TrainerCardViewModel? card) => await Launch(card, null);
+
+    public async Task Launch(TrainerCardViewModel? card, TrainerEntry? version)
     {
         if (card is null || _launcher.IsLaunching)
         {
@@ -438,15 +552,20 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
 
         Selected = card;
-        if (card.IsRunning)
+        if (card.IsRunning && version is null)
         {
             _main.OpenCheats(card);
             return;
         }
 
+        TrainerEntry entry = version ?? card.Entry;
         _main.ShowMessage($"Launching {card.Title}…");
 
-        LaunchResult result = await _launcher.LaunchAsync(card.Entry);
+        LaunchResult result = await _launcher.LaunchAsync(entry);
+        if (result.Outcome == LaunchOutcome.Started && card.HasVersions)
+        {
+            MakeDefault(card, entry);
+        }
         switch (result.Outcome)
         {
             case LaunchOutcome.AlreadyRunning:
@@ -520,9 +639,88 @@ public sealed partial class LibraryViewModel : PageViewModel
         }
     }
 
+    [RelayCommand]
+    private void ConfirmDelete(TrainerCardViewModel? card)
+    {
+        if (card is null)
+        {
+            return;
+        }
+
+        TrainerEntry entry = card.Entry;
+        _main.Push(new ConfirmViewModel(_main, card.HasVersions ? $"Delete this version of {card.Title}?" : $"Delete {card.Title}?",
+            $"{entry.File.FileName} goes to the Recycle Bin, so you can restore it from there.",
+            "Delete", Glyphs.Delete, () => _ = DeleteTrainer(entry)));
+    }
+
+    public async Task<bool> DeleteTrainer(TrainerEntry entry)
+    {
+        if (_launcher.Running.IsRunning(entry.Id))
+        {
+            _main.ShowError("Close the trainer before deleting it.");
+            return false;
+        }
+
+        string path = entry.File.FullPath;
+        try
+        {
+            Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(path,
+                Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+            string? folder = Path.GetDirectoryName(path);
+            if (folder is not null && !_library.Roots.Any(r => string.Equals(Path.GetFullPath(r).TrimEnd('\\'), folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
+                && Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any())
+            {
+                Directory.Delete(folder);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OperationCanceledException)
+        {
+            Log.Warn($"Delete failed for {path}: {ex.Message}");
+            _main.ShowError(ex is UnauthorizedAccessException
+                ? "Couldn't delete it: Trainer Deck needs administrator rights for that folder."
+                : $"Couldn't delete it: {ex.Message}");
+            return false;
+        }
+
+        Log.Info($"Deleted trainer {path}");
+        _main.ShowMessage($"Deleted {entry.File.FileName}. It's in the Recycle Bin.");
+        await _library.RescanAsync();
+        return true;
+    }
+
+    public void MakeDefault(TrainerCardViewModel card, TrainerEntry version)
+    {
+        foreach (TrainerEntry v in card.Versions)
+        {
+            bool preferred = v.Id == version.Id;
+            if (v.Meta.Preferred != preferred)
+            {
+                _library.UpdateMetadata(v.Id, m => m.Preferred = preferred);
+            }
+        }
+
+        Regroup(card);
+    }
+
+    public void Regroup(TrainerCardViewModel card)
+    {
+        var fresh = GameGroup.Build(_library.Entries.Where(e => GameGroup.KeyFor(e) == card.Group.Key && !e.Meta.Hidden)).FirstOrDefault();
+        if (fresh is not null)
+        {
+            card.SetGroup(fresh, _launcher.Running.IsRunning, _art, _dispatcher);
+        }
+
+        HintsChanged();
+    }
+
     private void UpdateRunning()
     {
         foreach (TrainerCardViewModel card in _cards.Values)
+        {
+            card.SetGroup(card.Group, _launcher.Running.IsRunning, _art, _dispatcher);
+        }
+
+        foreach (TrainerCardViewModel card in _single.Values)
         {
             card.IsRunning = _launcher.Running.IsRunning(card.Id);
         }
@@ -538,8 +736,12 @@ public sealed partial class LibraryViewModel : PageViewModel
             return;
         }
 
-        bool fav = !card.Entry.Meta.Favourite;
-        _library.UpdateMetadata(card.Id, m => m.Favourite = fav);
+        bool fav = !card.IsFavourite;
+        foreach (TrainerEntry v in card.Versions)
+        {
+            _library.UpdateMetadata(v.Id, m => m.Favourite = fav);
+        }
+
         card.Refresh(card.Entry);
         _main.ShowMessage(fav ? $"Added {card.Title} to favourites" : $"Removed {card.Title} from favourites");
         HintsChanged();
@@ -558,35 +760,31 @@ public sealed partial class LibraryViewModel : PageViewModel
     private void Refresh()
     {
         IReadOnlyList<TrainerEntry> all = _library.Entries;
-        List<TrainerEntry> visible = LibraryQuery.Apply(all, Tab, Sort, SearchText);
+        List<GameGroup> visible = LibraryQuery.ApplyGroups(all, Tab, Sort, SearchText);
 
-        var live = new HashSet<string>(all.Select(e => e.Id), StringComparer.Ordinal);
+        var live = new HashSet<string>(all.Select(GameGroup.KeyFor), StringComparer.Ordinal);
         foreach (string stale in _cards.Keys.Where(k => !live.Contains(k)).ToList())
         {
             _cards.Remove(stale);
         }
 
-        string? keepId = Selected?.Id;
+        _single.Clear();
+        string? keepKey = Selected?.Group.Key;
         var list = new List<TrainerCardViewModel>(visible.Count);
-        foreach (TrainerEntry e in visible)
+        foreach (GameGroup g in visible)
         {
-            if (!_cards.TryGetValue(e.Id, out var card))
+            if (!_cards.TryGetValue(g.Key, out var card))
             {
-                card = new TrainerCardViewModel(e);
-                _cards[e.Id] = card;
-            }
-            else
-            {
-                card.Refresh(e);
+                card = new TrainerCardViewModel(g);
+                _cards[g.Key] = card;
             }
 
-            card.IsRunning = _launcher.Running.IsRunning(e.Id);
-            card.EnsureArt(_art, _dispatcher);
+            card.SetGroup(g, _launcher.Running.IsRunning, _art, _dispatcher);
             list.Add(card);
         }
 
         Items = new ObservableCollection<TrainerCardViewModel>(list);
-        Selected = list.FirstOrDefault(c => c.Id == keepId) ?? list.FirstOrDefault();
+        Selected = list.FirstOrDefault(c => c.Group.Key == keepKey) ?? list.FirstOrDefault();
         UpdateEmptyState(all.Count, visible.Count);
         Summary = all.Count == 1 ? "1 trainer" : $"{all.Count} trainers";
         int zips = _library.PendingZips.Count;

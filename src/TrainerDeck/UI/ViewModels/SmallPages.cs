@@ -126,6 +126,27 @@ public sealed class ZipImportViewModel : RowListPageViewModel
     }
 }
 
+public sealed class ConfirmViewModel : RowListPageViewModel
+{
+    public ConfirmViewModel(MainViewModel main, string title, string body, string confirmLabel, string confirmGlyph, Action confirm) : base(main)
+    {
+        Title = title;
+        Body = body;
+        SetRows(
+        [
+            new ActionRow(confirmLabel, confirmGlyph, () =>
+            {
+                Main.Pop();
+                confirm();
+            }, confirmLabel) { IsDanger = true },
+            new ActionRow("Cancel", Glyphs.Close, () => Main.Pop(), "Cancel"),
+        ]);
+        SelectedRow = Rows[1];
+    }
+
+    protected override string BackLabel => "Cancel";
+}
+
 public sealed class CloseChoiceViewModel : RowListPageViewModel
 {
     private readonly Action _toTray;

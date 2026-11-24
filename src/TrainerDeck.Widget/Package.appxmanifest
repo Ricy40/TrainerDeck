@@ -11,7 +11,7 @@
   <Identity
     Name="TrainerDeck.GameBarWidget"
     Publisher="CN=Trainer Deck"
-    Version="0.1.4.0" />
+    Version="0.2.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="9b9a11ff-fba5-4f02-ab2b-1bbc836c7eeb" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
 

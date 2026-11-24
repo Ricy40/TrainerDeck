@@ -38,11 +38,11 @@
             </StackPanel>
 
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="-12,10,0,0">
-                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="All"
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="All" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=all}"
                              IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.All}}" />
-                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Favourites"
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Favourites" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=favourites}"
                              IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Favourites}}" />
-                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Recent"
+                <RadioButton Style="{StaticResource SelectorTab}" GroupName="LibraryTabs" Content="Recent" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=recent}"
                              IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter={x:Static lib:LibraryTab.Recent}}" />
             </StackPanel>
 
@@ -54,17 +54,31 @@
                         <TextBlock Text="{Binding PendingZipCount}" VerticalAlignment="Center" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
-                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="220" Tag="Search trainers"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <Border CornerRadius="6" Padding="2" Margin="-2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HeaderFocus}" Value="search">
+                                    <Setter Property="BorderThickness" Value="2" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Width="220" Tag="Search trainers"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                </Border>
 
                 <!-- Command bar -->
                 <Border Margin="8,0,0,0" Padding="1" CornerRadius="8" Height="40" Background="{DynamicResource LayerFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                     <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding CycleSortCommand}" ToolTip="Change sort order (Ctrl+S)" Focusable="False">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding CycleSortCommand}" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=sort}" ToolTip="Change sort order (Ctrl+S)" Focusable="False">
                             <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSort}" FontSize="16" />
                         </Button>
-                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding RescanCommand}" ToolTip="Rescan (F5)" Focusable="False">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding RescanCommand}" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=rescan}" ToolTip="Rescan (F5)" Focusable="False">
                             <TextBlock x:Name="RefreshGlyph" Text="{StaticResource GlyphRefresh}" FontSize="16"
                                        RenderTransformOrigin="0.5,0.5">
                                 <TextBlock.RenderTransform>
@@ -91,18 +105,18 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </Button>
-                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding AddTrainerCommand}" ToolTip="Add a trainer (from Downloads)" Focusable="False">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding AddTrainerCommand}" ToolTip="Add a trainer (from Downloads)" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=add}" Focusable="False">
                             <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphAdd}" FontSize="16" />
                         </Button>
-                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenFolderCommand}" ToolTip="Open trainer folder" Focusable="False">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenFolderCommand}" ToolTip="Open trainer folder" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=folder}" Focusable="False">
                             <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphFolder}" FontSize="16" />
                         </Button>
                         <Rectangle Width="1" Margin="4,9" Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
-                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenSettingsCommand}" ToolTip="Settings (Ctrl+,)" Focusable="False">
+                        <Button Style="{StaticResource SubtleButton}" Height="36" Command="{Binding OpenSettingsCommand}" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=settings}" ToolTip="Settings (Ctrl+,)" Focusable="False">
                             <TextBlock Style="{StaticResource Glyph}" Text="{StaticResource GlyphSettings}" FontSize="16" />
                         </Button>
                         <Button Height="36" Focusable="False"
-                                Command="{Binding DataContext.ToggleFullScreenCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                Command="{Binding DataContext.ToggleFullScreenCommand, RelativeSource={RelativeSource AncestorType=Window}}" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=fullscreen}">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource SubtleButton}">
                                     <Setter Property="ToolTip" Value="Full screen (F11)" />
@@ -128,7 +142,7 @@
                         </Button>
                         <Rectangle Width="1" Margin="4,9" Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
                         <Button Style="{StaticResource SubtleButton}" Height="36" Focusable="False" ToolTip="Close Trainer Deck"
-                                Command="{Binding DataContext.RequestCloseCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                Command="{Binding DataContext.RequestCloseCommand, RelativeSource={RelativeSource AncestorType=Window}}" Tag="{Binding HeaderFocus, Converter={StaticResource EnumEquals}, ConverterParameter=close}">
                             <TextBlock Style="{StaticResource Glyph}" Text="&#xE7E8;" FontSize="16" />
                         </Button>
                     </StackPanel>

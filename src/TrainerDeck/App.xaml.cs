@@ -78,10 +78,11 @@ public partial class App : Application
             return;
         }
 
-        if (e.Args.Length == 3 && e.Args[0].Equals(ImportTrainerFlag, StringComparison.OrdinalIgnoreCase))
+        if (e.Args.Length >= 3 && e.Args[0].Equals(ImportTrainerFlag, StringComparison.OrdinalIgnoreCase))
         {
-            TrainerImportResult import = TrainerImport.Import(e.Args[1], e.Args[2]);
-            Shutdown(import.Success ? 0 : 1);
+            bool deleteOriginal = e.Args.Any(a => a.Equals("--delete-original", StringComparison.OrdinalIgnoreCase));
+            TrainerImportResult import = TrainerImport.Import(e.Args[1], e.Args[2], new TrainerImportOptions(DeleteOriginal: deleteOriginal));
+            Shutdown(import.Success ? 0 : import.Duplicate ? TrainerImport.ExitDuplicate : 1);
             return;
         }
 

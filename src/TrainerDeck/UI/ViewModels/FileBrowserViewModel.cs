@@ -15,6 +15,26 @@ public sealed partial class FileBrowserViewModel : RowListPageViewModel
     private readonly Action<string> _picked;
     private string? _current;
 
+    public string? OptionLabel { get; init; }
+
+    public string? OptionDetail { get; init; }
+
+    public Action<bool>? OptionChanged { get; init; }
+
+    public bool HasOption => OptionLabel is not null;
+
+    [ObservableProperty]
+    private bool optionOn;
+
+    partial void OnOptionOnChanged(bool value)
+    {
+        OptionChanged?.Invoke(value);
+        HintsChanged();
+    }
+
+    [RelayCommand]
+    private void ToggleOption() => OptionOn = !OptionOn;
+
     public FileBrowserViewModel(MainViewModel main, string title, string? start, bool folderMode, Action<string> picked,
         IReadOnlyCollection<string>? extensions = null) : base(main)
     {
@@ -52,6 +72,11 @@ public sealed partial class FileBrowserViewModel : RowListPageViewModel
                 hints.Insert(hints.Count - 1, new FooterHint(InputAction.ParentFolder, "Up a folder"));
             }
 
+            if (HasOption)
+            {
+                hints.Insert(hints.Count - 1, new FooterHint(InputAction.Favourite, OptionOn ? "Keep original" : "Delete original"));
+            }
+
             return hints;
         }
     }
@@ -61,6 +86,12 @@ public sealed partial class FileBrowserViewModel : RowListPageViewModel
         if (action is InputAction.ParentFolder or InputAction.PrevTab && _current is not null)
         {
             GoUp();
+            return true;
+        }
+
+        if (action == InputAction.Favourite && HasOption)
+        {
+            ToggleOption();
             return true;
         }
 

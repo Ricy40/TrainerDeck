@@ -197,6 +197,33 @@ public static partial class FlingNameParser
 
     private static string TrimSlash(string p) => p.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
+    public static string? Variant(string exePath)
+    {
+        string s = Path.GetFileNameWithoutExtension(exePath).Trim();
+        string previous;
+        do
+        {
+            previous = s;
+            s = CopySuffixRegex().Replace(s, "");
+            s = DuplicateSuffixRegex().Replace(s, "");
+        }
+        while (s != previous);
+
+        MatchCollection words = TrainerWordRegex().Matches(s.Replace('_', ' '));
+        if (words.Count == 0)
+        {
+            return null;
+        }
+
+        string tail = s.Replace('_', ' ')[(words[^1].Index + words[^1].Length)..];
+        tail = BitsRegex().Replace(tail, m => m.Groups["n"].Value + "-bit");
+        tail = X64Regex().Replace(tail, "64-bit");
+        tail = X86Regex().Replace(tail, "32-bit");
+        tail = ParenthesesRegex().Replace(tail, m => " · " + m.Groups["inner"].Value.Trim() + " ");
+        tail = CollapseSpaces(tail).Trim(' ', '-', '·', ',');
+        return tail.Length == 0 ? null : tail;
+    }
+
     public static string Normalize(string s)
     {
         var sb = new StringBuilder(s.Length);
@@ -281,4 +308,16 @@ public static partial class FlingNameParser
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex SpacesRegex();
+
+    [GeneratedRegex(@"\b(?<n>32|64)\s*-?\s*bits?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex BitsRegex();
+
+    [GeneratedRegex(@"\bx64\b", RegexOptions.IgnoreCase)]
+    private static partial Regex X64Regex();
+
+    [GeneratedRegex(@"\bx(?:86|32)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex X86Regex();
+
+    [GeneratedRegex(@"\((?<inner>[^)]*)\)")]
+    private static partial Regex ParenthesesRegex();
 }

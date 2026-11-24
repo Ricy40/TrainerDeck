@@ -44,6 +44,41 @@ public static class LibraryQuery
         return list;
     }
 
+    public static List<GameGroup> ApplyGroups(
+        IEnumerable<TrainerEntry> entries,
+        LibraryTab tab,
+        SortMode sort,
+        string? search,
+        bool includeHidden = false)
+    {
+        string[] tokens = Tokenize(search);
+        IEnumerable<GameGroup> q = GameGroup.Build(entries.Where(e => includeHidden || !e.Meta.Hidden));
+        q = tab switch
+        {
+            LibraryTab.Favourites => q.Where(g => g.Versions.Any(v => v.Meta.Favourite)),
+            LibraryTab.Recent => q.Where(g => g.Versions.Any(v => v.Meta.LastLaunchedUtc is not null)),
+            _ => q,
+        };
+
+        if (tokens.Length > 0)
+        {
+            q = q.Where(g => g.Versions.Any(v => Matches(v, tokens)));
+        }
+
+        SortMode effective = tab == LibraryTab.Recent ? SortMode.RecentlyLaunched : sort;
+        Comparison<TrainerEntry> compare = Comparer(effective);
+        var list = q.ToList();
+        list.Sort((a, b) => compare(Representative(a, effective), Representative(b, effective)));
+        return list;
+    }
+
+    private static TrainerEntry Representative(GameGroup g, SortMode sort) => sort switch
+    {
+        SortMode.RecentlyLaunched => g.Versions.MaxBy(v => v.Meta.LastLaunchedUtc ?? DateTime.MinValue)!,
+        SortMode.RecentlyAdded => g.Versions.MaxBy(v => v.File.CreatedUtc)!,
+        _ => g.Default,
+    };
+
     public static SortMode Next(SortMode sort) => sort switch
     {
         SortMode.Alphabetical => SortMode.RecentlyLaunched,

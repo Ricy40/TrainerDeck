@@ -12,8 +12,14 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     private int _coverVersion;
     private Brush? _iconBackground;
 
-    public TrainerCardViewModel(TrainerEntry entry)
+    public TrainerCardViewModel(TrainerEntry entry) : this(new GameGroup(GameGroup.KeyFor(entry), entry, [entry]))
     {
+    }
+
+    public TrainerCardViewModel(GameGroup group)
+    {
+        TrainerEntry entry = group.Default;
+        Group = group;
         Entry = entry;
         Refresh(entry);
         _nameBackground = ColorTools.CardGradient(ColorTools.FromName(entry.DisplayName));
@@ -31,6 +37,12 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     partial void OnIsGenericIconChanged(bool value) => ArtBackground = value || _iconBackground is null ? _nameBackground : _iconBackground;
 
     public TrainerEntry Entry { get; private set; }
+
+    public GameGroup Group { get; private set; }
+
+    public IReadOnlyList<TrainerEntry> Versions => Group.Versions;
+
+    public bool HasVersions => Group.HasVersions;
 
     public string Id => Entry.Id;
 
@@ -75,9 +87,11 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     {
         Entry = entry;
         Title = entry.DisplayName;
-        Version = entry.File.Parsed.Version;
+        Version = Group is { HasVersions: true } g
+            ? string.Join("  ·  ", new[] { entry.File.Parsed.Version, $"{g.Versions.Count} versions" }.Where(s => !string.IsNullOrEmpty(s)))
+            : entry.File.Parsed.Version;
         OptionsBadge = entry.File.Parsed.OptionCount is int n ? $"+{n}" : null;
-        IsFavourite = entry.Meta.Favourite;
+        IsFavourite = Group?.Versions.Any(v => v.Meta.Favourite) ?? entry.Meta.Favourite;
         char letter = entry.JumpLetter;
         Initial = letter == '#' ? entry.DisplayName.Trim().FirstOrDefault(char.IsLetterOrDigit).ToString().ToUpperInvariant() : letter.ToString();
     }
@@ -113,6 +127,26 @@ public sealed partial class TrainerCardViewModel : ObservableObject
     }
 
     public void InvalidateArt() => _artRequested = false;
+
+    public void SetGroup(GameGroup group, Func<string, bool> isRunning, ArtService art, System.Windows.Threading.Dispatcher dispatcher)
+    {
+        Group = group;
+        TrainerEntry? running = group.Versions.FirstOrDefault(v => isRunning(v.Id));
+        TrainerEntry chosen = running ?? group.Default;
+        bool switched = chosen.Id != Entry.Id;
+        Refresh(chosen);
+        IsRunning = running is not null;
+        OnPropertyChanged(nameof(Versions));
+        OnPropertyChanged(nameof(HasVersions));
+        if (switched)
+        {
+            InvalidateArt();
+            Icon = null;
+            Cover = null;
+        }
+
+        EnsureArt(art, dispatcher);
+    }
 
     public async void ReloadCover(ArtService art, System.Windows.Threading.Dispatcher dispatcher)
     {

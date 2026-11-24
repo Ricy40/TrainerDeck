@@ -24,6 +24,8 @@ public sealed class TrainerMetadata
 
     public bool SteamAppIdLocked { get; set; }
 
+    public bool Preferred { get; set; }
+
     public List<CachedCheat>? Cheats { get; set; }
 
     public Dictionary<string, string>? CheatShortcuts { get; set; }

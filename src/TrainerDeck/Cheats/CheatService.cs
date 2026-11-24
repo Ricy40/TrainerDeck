@@ -87,14 +87,15 @@ public sealed class CheatService
     public async Task<TriggerResult> TriggerAsync(string trainerId, CheatOption option)
     {
         TrainerSession? session = ExistingSession(trainerId);
-        if (session?.Status == SessionStatus.Connected && await session.ToggleAsync(option.Index).ConfigureAwait(false))
-        {
-            return TriggerResult.Toggled;
-        }
-
+        bool connected = session?.Status == SessionStatus.Connected;
         if (option.Hotkey is Hotkey hotkey && await HotkeySender.SendAsync(hotkey).ConfigureAwait(false))
         {
-            return TriggerResult.SentHotkey;
+            return connected ? TriggerResult.Toggled : TriggerResult.SentHotkey;
+        }
+
+        if (connected && await session!.ToggleAsync(option.Index).ConfigureAwait(false))
+        {
+            return TriggerResult.Toggled;
         }
 
         return TriggerResult.Failed;

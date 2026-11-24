@@ -20,6 +20,7 @@ public class InstallLayoutTests
 
     [Theory]
     [InlineData(@"C:\Downloads\TrainerDeck-Setup.exe", new string[0], true)]
+    [InlineData(@"C:\Downloads\TrainerDeck-v0.2.0-setup.exe", new string[0], true)]
     [InlineData(@"C:\Downloads\setup.exe", new string[0], true)]
     [InlineData(@"C:\Tools\TrainerDeck.exe", new[] { "--install" }, true)]
     [InlineData(@"C:\Tools\TrainerDeck.exe", new string[0], false)]
