@@ -35,7 +35,7 @@ Running the setup again updates the installed copy in place.
 
 ### Portable
 
-1. Put `TrainerDeck.exe` in its own folder, e.g. `D:\Tools\Trainer Deck\`, and run it. A `Trainers` folder is created next to it.
+1. Unzip `TrainerDeck-Portable.zip` somewhere, e.g. `D:\Tools\`, and run `Trainer Deck\TrainerDeck.exe`. A `Trainers` folder is created next to it.
 2. Put your trainers (or their `.zip` files) in `Trainers`. Subfolders are fine. The library updates by itself.
 3. Optional: add more trainer folders in **Settings › Add a trainer folder…**.
 
@@ -196,11 +196,12 @@ dotnet test
 .\build.ps1
 ```
 
-This creates two files in `publish\`:
-- `TrainerDeck.exe`: the portable app.
+This creates, in `publish\`:
 - `TrainerDeck-Setup.exe`: the installer.
+- `Trainer Deck\TrainerDeck.exe`: the portable app in its own folder (its `Trainers` folder and data appear there on first launch).
+- `TrainerDeck-Portable.zip`: that folder, zipped for sharing.
 
-`.\build.ps1 -Portable` builds only the portable `TrainerDeck.exe` into `publish\portable\` (no installer copy). It still carries the Game Bar widget, which **Settings › Xbox Game Bar widget** installs; add `-NoWidget` for a quicker build without it. In Rider, the **Build installer** and **Build portable** run configurations (in `.run\`) do the same.
+The installer and the portable exe are the same program; only the name differs (any name containing "Setup" runs the installer). In Rider, the **Build installer & portable** run configuration (in `.run\`) runs `build.ps1`; `-NoWidget` gives a quicker build without the Game Bar widget.
 
 If Visual Studio's UWP tools are installed, `build.ps1` also builds the Game Bar widget, signs it and embeds it in both exes. The first run creates a self-signed **CN=Trainer Deck** signing certificate in `.signing\` (ignored by git). Keep a backup of that folder: widget updates must be signed with the same certificate, and a new one means setup has to replace the trust on each PC.
 

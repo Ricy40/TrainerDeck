@@ -1,20 +1,15 @@
-# Builds the single-file app and its installer into .\publish
-#   TrainerDeck.exe        portable: runs from any folder, keeps its data next to it
-#   TrainerDeck-Setup.exe  the same program; named "Setup" it installs itself into Program Files
+# Builds Trainer Deck into .\publish. Both are the same single-file program:
+#   TrainerDeck-Setup.exe         named "Setup", it installs itself into Program Files
+#   Trainer Deck\TrainerDeck.exe  the portable copy: runs from its folder and keeps its data there
+#   TrainerDeck-Portable.zip      that folder, zipped for sharing
 #
 # With Visual Studio's UWP tools installed (in Build Tools for Visual Studio 2022: the WinUI workload with its
 # optional Universal Windows Platform tools), it also builds the
 # Xbox Game Bar widget, signs it with a self-signed "CN=Trainer Deck" certificate (created once in .signing\,
 # which stays out of git) and embeds both in the installer. -NoWidget skips that.
-#
-# -Portable builds just the portable TrainerDeck.exe (no installer copy) into .\publish\portable. It still carries the
-# widget, which Settings can install; add -NoWidget for a quicker build without it.
-param([string]$Out = "publish", [switch]$NoWidget, [switch]$Portable)
+param([string]$Out = "publish", [switch]$NoWidget)
 
 $ErrorActionPreference = "Stop"
-if ($Portable) {
-    if (-not $PSBoundParameters.ContainsKey("Out")) { $Out = "publish\portable" }
-}
 if (-not [IO.Path]::IsPathRooted($Out)) { $Out = Join-Path $PSScriptRoot $Out }
 $Out = [IO.Path]::GetFullPath($Out)
 $publishArgs = @()
@@ -90,12 +85,34 @@ if (-not $NoWidget) {
     }
 }
 
-dotnet publish "$PSScriptRoot\src\TrainerDeck" -c Release -r win-x64 --self-contained true `
-    -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:DebugType=None -o $Out @publishArgs
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-if (-not $Portable) {
-    Copy-Item (Join-Path $Out "TrainerDeck.exe") (Join-Path $Out "TrainerDeck-Setup.exe") -Force
+# Rider's background build or a virus scan can briefly hold the compiled DLL open; one retry gets past that.
+for ($attempt = 1; $attempt -le 2; $attempt++) {
+    dotnet publish "$PSScriptRoot\src\TrainerDeck" -c Release -r win-x64 --self-contained true `
+        -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:DebugType=None -o $Out @publishArgs
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($attempt -eq 2) { exit $LASTEXITCODE }
+    Write-Warning "The build failed; trying once more in case a file was briefly in use."
+    Start-Sleep -Seconds 5
 }
 
-Get-ChildItem $Out -Filter *.exe | Select-Object Name, @{ n = "MB"; e = { [math]::Round($_.Length / 1MB, 1) } }
+$portableDir = Join-Path $Out "Trainer Deck"
+$portableZip = Join-Path $Out "TrainerDeck-Portable.zip"
+Remove-Item $portableDir, $portableZip, (Join-Path $Out "TrainerDeck-Portable.exe") -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force $portableDir | Out-Null
+Move-Item (Join-Path $Out "TrainerDeck.exe") (Join-Path $portableDir "TrainerDeck.exe") -Force
+Copy-Item (Join-Path $portableDir "TrainerDeck.exe") (Join-Path $Out "TrainerDeck-Setup.exe") -Force
+# Entries are written by hand so the zip uses standard "/" paths (Windows PowerShell's zip helpers write "\").
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$zip = [IO.Compression.ZipFile]::Open($portableZip, [IO.Compression.ZipArchiveMode]::Create)
+try {
+    Get-ChildItem $portableDir -File -Recurse | ForEach-Object {
+        $entry = "Trainer Deck/" + $_.FullName.Substring($portableDir.Length + 1).Replace("\", "/")
+        [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $entry, [IO.Compression.CompressionLevel]::Optimal)
+    }
+}
+finally {
+    $zip.Dispose()
+}
+
+Get-ChildItem $Out -File -Include *.exe, *.zip -Recurse -Depth 1 |
+    Select-Object @{ n = "File"; e = { $_.FullName.Substring($Out.Length + 1) } }, @{ n = "MB"; e = { [math]::Round($_.Length / 1MB, 1) } }
