@@ -25,6 +25,10 @@ public sealed class OverlayController : IDisposable
     private string? _trainerId;
     private HwndSource? _hwndSource;
     private Hotkey? _hotkey;
+    private bool _suspended;
+    private IntPtr _keyboardHook;
+    private LowLevelKeyboardProc? _keyboardProc;
+    private long _lastToggleTicks;
 
     public OverlayController(MainViewModel main, Window mainWindow)
     {
@@ -43,6 +47,7 @@ public sealed class OverlayController : IDisposable
 
     public void SuspendHotkey(bool suspend)
     {
+        _suspended = suspend;
         if (suspend && _hwndSource is not null)
         {
             UnregisterHotKey(_hwndSource.Handle, HotkeyId);
@@ -59,6 +64,59 @@ public sealed class OverlayController : IDisposable
         _hwndSource = HwndSource.FromHwnd(hwnd);
         _hwndSource?.AddHook(WndProc);
         RegisterHotkey();
+        _keyboardProc = KeyboardHook;
+        _keyboardHook = SetWindowsHookEx(WhKeyboardLl, _keyboardProc, GetModuleHandle(null), 0);
+        if (_keyboardHook == IntPtr.Zero)
+        {
+            Log.Warn("Couldn't watch the keyboard for the overlay shortcut; only the registered hotkey will open it.");
+        }
+    }
+
+    private void ToggleFromShortcut(string source)
+    {
+        long now = Environment.TickCount64;
+        if (now - Interlocked.Exchange(ref _lastToggleTicks, now) < 400)
+        {
+            return;
+        }
+
+        Log.Info($"Overlay shortcut pressed ({source}).");
+        Toggle();
+    }
+
+    private IntPtr KeyboardHook(int code, IntPtr wParam, IntPtr lParam)
+    {
+        if (code >= 0 && !_suspended && _hotkey is Hotkey hotkey && (wParam == WmKeyDown || wParam == WmSysKeyDown))
+        {
+            int vk = Marshal.ReadInt32(lParam);
+            if (vk == hotkey.Key && HeldModifiers() == hotkey.Modifiers)
+            {
+                _mainWindow.Dispatcher.BeginInvoke(() => ToggleFromShortcut("keyboard"));
+            }
+        }
+
+        return CallNextHookEx(_keyboardHook, code, wParam, lParam);
+    }
+
+    private static HotkeyModifiers HeldModifiers()
+    {
+        var m = HotkeyModifiers.None;
+        if (GetAsyncKeyState(0x11) < 0)
+        {
+            m |= HotkeyModifiers.Ctrl;
+        }
+
+        if (GetAsyncKeyState(0x10) < 0)
+        {
+            m |= HotkeyModifiers.Shift;
+        }
+
+        if (GetAsyncKeyState(0x12) < 0)
+        {
+            m |= HotkeyModifiers.Alt;
+        }
+
+        return m;
     }
 
     public void Toggle()
@@ -273,7 +331,7 @@ public sealed class OverlayController : IDisposable
     {
         if (msg == WmHotkey && wParam.ToInt32() == HotkeyId)
         {
-            Toggle();
+            ToggleFromShortcut("hotkey");
             handled = true;
         }
 
@@ -297,8 +355,36 @@ public sealed class OverlayController : IDisposable
             _hwndSource.RemoveHook(WndProc);
         }
 
+        if (_keyboardHook != IntPtr.Zero)
+        {
+            UnhookWindowsHookEx(_keyboardHook);
+            _keyboardHook = IntPtr.Zero;
+        }
+
         _window?.Close();
     }
+
+    private const int WhKeyboardLl = 13;
+    private static readonly IntPtr WmKeyDown = 0x0100;
+    private static readonly IntPtr WmSysKeyDown = 0x0104;
+
+    private delegate IntPtr LowLevelKeyboardProc(int code, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetWindowsHookEx(int id, LowLevelKeyboardProc proc, IntPtr module, uint threadId);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnhookWindowsHookEx(IntPtr hook);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vk);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr GetModuleHandle(string? name);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

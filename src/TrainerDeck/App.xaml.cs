@@ -200,7 +200,7 @@ public partial class App : Application
         MainViewModel main = _main;
         var overlay = new OverlayController(main, window);
         _overlay = overlay;
-        var background = new BackgroundInput(cheats, settings, _launcher.Running, overlay.Open);
+        var background = new BackgroundInput(cheats, settings, overlay.Open);
         _controllers = new ControllerInput(
             window,
             (action, kind) => Dispatcher.BeginInvoke(() =>

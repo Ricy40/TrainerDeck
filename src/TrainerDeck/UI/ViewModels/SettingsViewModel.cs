@@ -122,7 +122,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
             int comboIndex = Array.FindIndex(OverlayCombos, c => string.Equals(c.Value, Current.OverlayControllerCombo, StringComparison.OrdinalIgnoreCase));
             rows.Add(new ChoiceRow("Controller combo", OverlayCombos.Select(c => c.Label).ToArray(), Math.Max(0, comboIndex),
                 i => Change(s => s.OverlayControllerCombo = OverlayCombos[i].Value),
-                "Press these together while a trainer is running") { Glyph = Glyphs.Game });
+                "Press these together in any app to open the overlay") { Glyph = Glyphs.Game });
             if (Main.OpenOverlay is not null)
             {
                 rows.Add(new ActionRow("Open the overlay now", Glyphs.View, Main.OpenOverlay, "Open", "Try it out"));
@@ -153,7 +153,7 @@ public sealed class SettingsViewModel : RowListPageViewModel
             "F11 switches at any time") { Glyph = Glyphs.FullScreen });
         rows.Add(new ChoiceRow("Close button", ["Exit Trainer Deck", "Keep running in the tray", "Ask every time"], (int)Current.CloseButton,
             i => _s.Settings.Update(s => s.CloseButton = (CloseButtonBehavior)i),
-            "In the tray, Trainer Deck keeps listening for the overlay and cheat shortcuts while a trainer runs") { Glyph = Glyphs.Power });
+            "In the tray, Trainer Deck keeps listening for the overlay shortcut and combo, and for cheat shortcuts while a trainer runs") { Glyph = Glyphs.Power });
 
         rows.Add(new HeaderRow("Steam"));
         bool hasSteam = _s.Steam.SteamPath is not null;

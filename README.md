@@ -124,7 +124,7 @@ FLiNG trainers expect a keyboard with a numpad. Trainer Deck lets you use them w
 The overlay is a panel over your game with the running trainer's cheats. Navigate it with the pad, and press B to close it and return to the game.
 
 - **Keyboard shortcut:** Ctrl+Shift+F12 by default (Settings › Overlay › Keyboard shortcut to record another). It works from any app, so you can map an Ally X back paddle to it in Armoury Crate.
-- **Controller combo:** View + Menu by default; also L3 + R3, LB + RB + View or LB + RB + Menu. It only listens while a trainer is running.
+- **Controller combo:** View + Menu by default; also L3 + R3, LB + RB + View or LB + RB + Menu. It works from any app, with or without a trainer running.
 - **Several trainers running:** LB / RB switches between them.
 - **Fullscreen games:** use borderless or windowed mode. Exclusive full-screen games minimise when the overlay takes focus.
 
@@ -148,7 +148,7 @@ Turn on **Settings › Cheats › In-game controller shortcuts**, then assign sh
 **Settings › Window › Close button** decides what closing the window does (its × button, the taskbar's Close window, Alt+F4, or the power button at the top right of the library):
 - **Ask every time** (default): choose between the tray and exiting, with **Remember my choice** to stop asking
 - **Exit Trainer Deck**
-- **Keep running in the tray:** while it's in the tray, the overlay shortcut, the overlay combo and cheat shortcuts keep working whenever a trainer is running. Click the tray icon to open the window again, or right-click it to open the overlay or exit.
+- **Keep running in the tray:** while it's in the tray, the overlay shortcut and the overlay combo keep working, and cheat shortcuts work whenever a trainer is running. Click the tray icon to open the window again, or right-click it to open the overlay or exit.
 
 **After launching a trainer** can also be set to **Hide to tray**.
 
